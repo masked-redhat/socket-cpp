@@ -6,3 +6,7 @@ cs425*
 # System files
 .sh
 .vscode
+
+# executable files
+*.exe
+*.out
