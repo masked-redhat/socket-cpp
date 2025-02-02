@@ -29,9 +29,10 @@
 using namespace std;
 
 mutex clientMutex;
-vector<SOCKET> clients;   // To store connected client sockets
-mss users = load_users(); // load users
-// map<SOCKET, string> users_socket; // socket: username
+vector<SOCKET> clients;            // To store connected client sockets
+mss users = load_users();          // load users
+map<string, SOCKET> users_socket;  // username: socket for private messaging
+map<string, vector<SOCKET>> group; // group management
 
 void removeClient(SOCKET clientSocket)
 {
@@ -65,9 +66,10 @@ void handleClient(SOCKET clientSocket)
     send(clientSocket, message.c_str(), message.size(), 0);
     recv(clientSocket, buffer, BUFFER_SIZE, 0);
     if (users[username] != buffer)
+    {
         message = "Authentication failed";
-    // users_socket[clientSocket] = username;
-
+        users_socket[username] = clientSocket;
+    }
     else
         message = "Authentication success";
 
@@ -104,19 +106,35 @@ void handleClient(SOCKET clientSocket)
 
         cout << "Received: " << buffer << "\n";
 
-        // Echo the message to all connected clients
-        lock_guard<mutex> lock(clientMutex);
-        string message = "[" + username + "] : " + buffer;
-        memset(buffer, 0, sizeof(buffer));
-        for (int i = 0; i < message.length(); i++)
-            buffer[i] = message[i];
-        for (SOCKET client : clients)
+        string message = buffer;
+        string endpoint, data;
+        for (int i = 0; buffer[i] != '\0'; i++)
         {
-            if (client != clientSocket)
-            { // Don't echo back to the sender
-                send(client, buffer, sizeof(buffer), 0);
+            if (buffer[i] == ' ')
+            {
+                endpoint = message.substr(0, i);
+                data = message.substr(i + 1);
+                break;
             }
         }
+
+        if (endpoint == "/msg")
+        {
+        }
+
+        // // Echo the message to all connected clients
+        // lock_guard<mutex> lock(clientMutex);
+        // string message = "[" + username + "] : " + buffer;
+        // memset(buffer, 0, sizeof(buffer));
+        // for (int i = 0; i < message.length(); i++)
+        //     buffer[i] = message[i];
+        // for (SOCKET client : clients)
+        // {
+        //     if (client != clientSocket)
+        //     { // Don't echo back to the sender
+        //         send(client, buffer, sizeof(buffer), 0);
+        //     }
+        // }
     }
 }
 
