@@ -21,14 +21,55 @@
 #include <unistd.h>
 #endif
 
+// load users
+#include "file.h"
+
+#define BUFFER_SIZE 1024
+
 using namespace std;
 
 mutex clientMutex;
-vector<SOCKET> clients; // To store connected client sockets
+vector<SOCKET> clients;   // To store connected client sockets
+mss users = load_users(); // load users
+
+void removeClient(SOCKET clientSocket)
+{
+    vector<SOCKET>::iterator first = clients.begin();
+    vector<SOCKET>::iterator end = clients.end();
+
+    while (first != end)
+    {
+        if (*first == clientSocket)
+        {
+            clients.erase(first, first);
+            break;
+        }
+        first++;
+    }
+}
 
 void handleClient(SOCKET clientSocket)
 {
-    char buffer[1024];
+    char buffer[BUFFER_SIZE];
+    string username;
+    string message = "Enter username: ";
+
+    memset(buffer, 0, BUFFER_SIZE);
+    send(clientSocket, message.c_str(), message.size(), 0);
+    recv(clientSocket, buffer, BUFFER_SIZE, 0);
+    username = buffer;
+
+    message = "Enter password: ";
+    memset(buffer, 0, BUFFER_SIZE);
+    send(clientSocket, message.c_str(), message.size(), 0);
+    recv(clientSocket, buffer, BUFFER_SIZE, 0);
+    if (users[username] != buffer)
+        message = "Authentication failed";
+    else
+        message = "Authentication success";
+
+    send(clientSocket, message.c_str(), message.size(), 0);
+
     while (true)
     {
         memset(buffer, 0, sizeof(buffer));
@@ -40,7 +81,7 @@ void handleClient(SOCKET clientSocket)
             // Remove client from the list
             {
                 lock_guard<mutex> lock(clientMutex);
-                clients.erase(clients.begin(), clients.end());
+                removeClient(clientSocket);
             }
             closesocket(clientSocket);
             return;
