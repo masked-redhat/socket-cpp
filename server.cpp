@@ -31,6 +31,7 @@ using namespace std;
 mutex clientMutex;
 vector<SOCKET> clients;   // To store connected client sockets
 mss users = load_users(); // load users
+// map<SOCKET, string> users_socket; // socket: username
 
 void removeClient(SOCKET clientSocket)
 {
@@ -65,6 +66,8 @@ void handleClient(SOCKET clientSocket)
     recv(clientSocket, buffer, BUFFER_SIZE, 0);
     if (users[username] != buffer)
         message = "Authentication failed";
+    // users_socket[clientSocket] = username;
+
     else
         message = "Authentication success";
 
@@ -82,6 +85,18 @@ void handleClient(SOCKET clientSocket)
             {
                 lock_guard<mutex> lock(clientMutex);
                 removeClient(clientSocket);
+
+                string message = "[INFO] " + username + " left";
+                memset(buffer, 0, sizeof(buffer));
+                for (int i = 0; i < message.length(); i++)
+                    buffer[i] = message[i];
+                for (SOCKET client : clients)
+                {
+                    if (client != clientSocket)
+                    { // Don't echo back to the sender
+                        send(client, buffer, sizeof(buffer), 0);
+                    }
+                }
             }
             closesocket(clientSocket);
             return;
@@ -91,11 +106,15 @@ void handleClient(SOCKET clientSocket)
 
         // Echo the message to all connected clients
         lock_guard<mutex> lock(clientMutex);
+        string message = "[" + username + "] : " + buffer;
+        memset(buffer, 0, sizeof(buffer));
+        for (int i = 0; i < message.length(); i++)
+            buffer[i] = message[i];
         for (SOCKET client : clients)
         {
             if (client != clientSocket)
             { // Don't echo back to the sender
-                send(client, buffer, bytesRead, 0);
+                send(client, buffer, sizeof(buffer), 0);
             }
         }
     }
