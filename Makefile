@@ -5,8 +5,8 @@ CXXFLAGS = -lws2_32 -std=c++17
 # Targets
 SERVER_SRC = server.cpp
 CLIENT_SRC = client.cpp
-SERVER_BIN = server
-CLIENT_BIN = client
+SERVER_BIN = server.exe
+CLIENT_BIN = client.exe
 
 # Default target
 all: $(SERVER_BIN) $(CLIENT_BIN)
