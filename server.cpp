@@ -1,14 +1,12 @@
-#include "./headers/common.h";
-#include "./headers/ds.h";
-#include "./headers/concurrency.h"; // mutex and thread
-#include "./headers/networking.h";  // socket libs
-
-// load users
-#include "file.h"
+#include "./headers/common.h"
+#include "./headers/ds.h"
+#include "./headers/concurrency.h" // mutex and thread
+#include "./headers/networking.h"  // socket libs
+#include "./headers/handlers.h"    // handlers
+#include "./headers/namespace.h"   // namespaces
+#include "file.h"                  // load users
 
 #define BUFFER_SIZE 1024
-
-using namespace std;
 
 mutex clientMutex;
 vector<SOCKET> clients;            // To store connected client sockets
@@ -30,6 +28,14 @@ void removeClient(SOCKET clientSocket)
         }
         first++;
     }
+
+    string username = "";
+    for (auto x : users_socket)
+        if (x.second == clientSocket)
+            username = x.first;
+
+    if (username != "")
+        users_socket.erase(username);
 }
 
 void handleClient(SOCKET clientSocket)
@@ -43,6 +49,31 @@ void handleClient(SOCKET clientSocket)
     recv(clientSocket, buffer, BUFFER_SIZE, 0);
     username = buffer;
 
+    if (users_socket[username] != 0)
+    {
+        message = "Username already exist in connection";
+        send(clientSocket, message.c_str(), message.size(), 0);
+        // Remove client from the list
+        {
+            lock_guard<mutex> lock(clientMutex);
+            removeClient(clientSocket);
+
+            string message = "[INFO] " + username + " left";
+            memset(buffer, 0, sizeof(buffer));
+            for (int i = 0; i < message.length(); i++)
+                buffer[i] = message[i];
+            for (SOCKET client : clients)
+            {
+                if (client != clientSocket)
+                { // Don't echo back to the sender
+                    send(client, buffer, sizeof(buffer), 0);
+                }
+            }
+        }
+        closesocket(clientSocket);
+        return;
+    }
+
     message = "Enter password: ";
     memset(buffer, 0, BUFFER_SIZE);
     send(clientSocket, message.c_str(), message.size(), 0);
@@ -50,10 +81,15 @@ void handleClient(SOCKET clientSocket)
     if (users[username] != buffer)
     {
         message = "Authentication failed";
-        users_socket[username] = clientSocket;
     }
     else
+    {
         message = "Authentication success";
+        {
+            lock_guard<mutex> lock(clientMutex);
+            users_socket[username] = clientSocket;
+        }
+    }
 
     send(clientSocket, message.c_str(), message.size(), 0);
 
@@ -86,9 +122,9 @@ void handleClient(SOCKET clientSocket)
             return;
         }
 
-        cout << "Received: " << buffer << "\n";
+        // cout << "Received: " << buffer << "\n";
 
-        string message = buffer;
+        string message = string(buffer);
         string endpoint, data;
         for (int i = 0; buffer[i] != '\0'; i++)
         {
@@ -101,8 +137,7 @@ void handleClient(SOCKET clientSocket)
         }
 
         if (endpoint == "/msg")
-        {
-        }
+            handle_private_msg(data, username, users_socket);
 
         // // Echo the message to all connected clients
         // lock_guard<mutex> lock(clientMutex);
