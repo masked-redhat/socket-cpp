@@ -57,18 +57,6 @@ void handleClient(SOCKET clientSocket)
         {
             lock_guard<mutex> lock(clientMutex);
             removeClient(clientSocket);
-
-            string message = "[INFO] " + username + " left";
-            memset(buffer, 0, sizeof(buffer));
-            for (int i = 0; i < message.length(); i++)
-                buffer[i] = message[i];
-            for (SOCKET client : clients)
-            {
-                if (client != clientSocket)
-                { // Don't echo back to the sender
-                    send(client, buffer, sizeof(buffer), 0);
-                }
-            }
         }
         closesocket(clientSocket);
         return;
@@ -138,6 +126,8 @@ void handleClient(SOCKET clientSocket)
 
         if (endpoint == "/msg")
             handle_private_msg(data, username, users_socket);
+        else if (endpoint == "/broadcast")
+            handle_broadcasting(data, username, clients, clientMutex, clientSocket);
 
         // // Echo the message to all connected clients
         // lock_guard<mutex> lock(clientMutex);
