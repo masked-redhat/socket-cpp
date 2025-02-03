@@ -9,10 +9,10 @@
 #define BUFFER_SIZE 1024
 
 mutex clientMutex;
-vector<SOCKET> clients;            // To store connected client sockets
-mss users = load_users();          // load users
-map<string, SOCKET> users_socket;  // username: socket for private messaging
-map<string, vector<SOCKET>> group; // group management
+vector<SOCKET> clients;             // To store connected client sockets
+mss users = load_users();           // load users
+map<string, SOCKET> users_socket;   // username: socket for private messaging
+map<string, vector<SOCKET>> groups; // group management
 
 void removeClient(SOCKET clientSocket)
 {
@@ -66,9 +66,7 @@ void handleClient(SOCKET clientSocket)
     send(clientSocket, message.c_str(), message.size(), 0);
     recv(clientSocket, buffer, BUFFER_SIZE, 0);
     if (users[username] != buffer)
-    {
         message = "Authentication failed";
-    }
     else
     {
         message = "Authentication success";
@@ -115,6 +113,8 @@ void handleClient(SOCKET clientSocket)
             handle_private_msg(data, username, users_socket);
         else if (endpoint == "/broadcast")
             handle_broadcasting(data, username, clients, clientMutex, clientSocket);
+        else if (endpoint == "/create_group")
+            handle_create_group(groups, data, clientSocket, clientMutex);
 
         else if (endpoint == "/exit")
         {
