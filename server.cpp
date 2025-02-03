@@ -115,6 +115,8 @@ void handleClient(SOCKET clientSocket)
             handle_broadcasting(data, username, clients, clientMutex, clientSocket);
         else if (endpoint == "/create_group")
             handle_create_group(groups, data, clientSocket, clientMutex);
+        else if (endpoint == "/join_group")
+            handle_join_group(groups, data, clientSocket, clientMutex);
 
         else if (endpoint == "/exit")
         {
