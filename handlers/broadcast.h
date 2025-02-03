@@ -4,7 +4,7 @@
 #include "../headers/concurrency.h"
 #include "../headers/namespace.h"
 
-void handle_broadcasting(string data, string &username, vector<SOCKET> &clients, mutex &clientMutex, SOCKET &clientSocket)
+void handle_broadcasting(string data, string username, vector<SOCKET> &clients, mutex &clientMutex, SOCKET &clientSocket)
 {
     lock_guard<mutex> lock(clientMutex);
     string message = "[ " + username + " ] : " + data;

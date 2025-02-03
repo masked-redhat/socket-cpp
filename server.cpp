@@ -53,7 +53,6 @@ void handleClient(SOCKET clientSocket)
     {
         message = "Username already exist in connection";
         send(clientSocket, message.c_str(), message.size(), 0);
-        // Remove client from the list
         {
             lock_guard<mutex> lock(clientMutex);
             removeClient(clientSocket);
@@ -77,6 +76,7 @@ void handleClient(SOCKET clientSocket)
             lock_guard<mutex> lock(clientMutex);
             users_socket[username] = clientSocket;
         }
+        handle_broadcasting(username + " joined", "INFO", clients, clientMutex, clientSocket);
     }
 
     send(clientSocket, message.c_str(), message.size(), 0);
@@ -88,23 +88,10 @@ void handleClient(SOCKET clientSocket)
         if (bytesRead <= 0)
         {
             cerr << "Client disconnected.\n";
-
-            // Remove client from the list
             {
                 lock_guard<mutex> lock(clientMutex);
                 removeClient(clientSocket);
-
-                string message = "[INFO] " + username + " left";
-                memset(buffer, 0, sizeof(buffer));
-                for (int i = 0; i < message.length(); i++)
-                    buffer[i] = message[i];
-                for (SOCKET client : clients)
-                {
-                    if (client != clientSocket)
-                    { // Don't echo back to the sender
-                        send(client, buffer, sizeof(buffer), 0);
-                    }
-                }
+                handle_broadcasting(username + " left", "INFO", clients, clientMutex, clientSocket);
             }
             closesocket(clientSocket);
             return;
@@ -128,6 +115,16 @@ void handleClient(SOCKET clientSocket)
             handle_private_msg(data, username, users_socket);
         else if (endpoint == "/broadcast")
             handle_broadcasting(data, username, clients, clientMutex, clientSocket);
+
+        else if (endpoint == "/exit")
+        {
+            {
+                lock_guard<mutex> lock(clientMutex);
+                removeClient(clientSocket);
+            }
+            closesocket(clientSocket);
+            return;
+        }
 
         // // Echo the message to all connected clients
         // lock_guard<mutex> lock(clientMutex);
