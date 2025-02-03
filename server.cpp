@@ -95,8 +95,6 @@ void handleClient(SOCKET clientSocket)
             return;
         }
 
-        // cout << "Received: " << buffer << "\n";
-
         string message = string(buffer);
         string endpoint, data;
         for (int i = 0; buffer[i] != '\0'; i++)
@@ -121,7 +119,6 @@ void handleClient(SOCKET clientSocket)
             handle_leave_group(groups, data, clientSocket, clientMutex);
         else if (endpoint == "/group_msg")
             handle_group_message(groups, data, username, clientSocket, clientMutex);
-
         else if (endpoint == "/exit")
         {
             {
@@ -131,20 +128,6 @@ void handleClient(SOCKET clientSocket)
             closesocket(clientSocket);
             return;
         }
-
-        // // Echo the message to all connected clients
-        // lock_guard<mutex> lock(clientMutex);
-        // string message = "[" + username + "] : " + buffer;
-        // memset(buffer, 0, sizeof(buffer));
-        // for (int i = 0; i < message.length(); i++)
-        //     buffer[i] = message[i];
-        // for (SOCKET client : clients)
-        // {
-        //     if (client != clientSocket)
-        //     { // Don't echo back to the sender
-        //         send(client, buffer, sizeof(buffer), 0);
-        //     }
-        // }
     }
 }
 
