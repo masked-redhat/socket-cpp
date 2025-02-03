@@ -3,6 +3,7 @@
 #include "../headers/networking.h"
 #include "../headers/concurrency.h"
 #include "../headers/namespace.h"
+#include <algorithm>
 
 void handle_create_group(map<string, vector<SOCKET>> &groups, string &group_name, SOCKET &clientSocket, mutex &clientMutex)
 {
@@ -52,5 +53,36 @@ void handle_join_group(map<string, vector<SOCKET>> &groups, string &group_name, 
     }
 
     string message = "you have joined the group";
+    send(clientSocket, message.c_str(), message.size(), 0);
+}
+
+void handle_leave_group(map<string, vector<SOCKET>> &groups, string &group_name, SOCKET &clientSocket, mutex &clientMutex)
+{
+    if (groups.find(group_name) == groups.end())
+    {
+        string message = "Group does not exist";
+        send(clientSocket, message.c_str(), message.size(), 0);
+        return;
+    }
+
+    vector<SOCKET> members;
+    {
+        lock_guard<mutex> lock(clientMutex);
+        members = groups[group_name];
+
+        auto it = find(members.begin(), members.end(), clientSocket);
+
+        if (it == members.end())
+        {
+            string message = "You are not in the group";
+            send(clientSocket, message.c_str(), message.size(), 0);
+            return;
+        }
+
+        members.erase(it);
+        groups[group_name] = members;
+    }
+
+    string message = "you have left the group";
     send(clientSocket, message.c_str(), message.size(), 0);
 }

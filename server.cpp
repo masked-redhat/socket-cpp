@@ -117,6 +117,8 @@ void handleClient(SOCKET clientSocket)
             handle_create_group(groups, data, clientSocket, clientMutex);
         else if (endpoint == "/join_group")
             handle_join_group(groups, data, clientSocket, clientMutex);
+        else if (endpoint == "/leave_group")
+            handle_leave_group(groups, data, clientSocket, clientMutex);
 
         else if (endpoint == "/exit")
         {
