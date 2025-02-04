@@ -4,6 +4,7 @@
 #ifndef UTILS_H
 #define UTILS_H
 
+// separates string by space and put the values in two different strings
 void separate_string(const string &data, string &string1, string &string2)
 {
     auto it = data.find(" ");
