@@ -2,6 +2,9 @@
 #include "../headers/networking.h"
 #include "../headers/namespace.h"
 
+#ifndef RECIEVE_FN
+#define RECIEVE_FN
+
 #define BUFFER_SIZE 1024
 
 typedef pair<string, int> psi;
@@ -18,3 +21,5 @@ psi _recieve(SOCKET &socket)
 
     return result;
 }
+
+#endif

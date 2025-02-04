@@ -1,5 +1,4 @@
 #include "./headers/common.h"
-#include "./headers/ds.h"
 #include "./headers/concurrency.h" // mutex and thread
 #include "./headers/networking.h"  // socket libs
 #include "./headers/handlers.h"    // handlers
@@ -50,7 +49,7 @@ void handleClient(SOCKET client_socket)
             lgm lock(client_mutex);
             users_socket[username] = client_socket;
         }
-        handle_broadcasting(username + " joined", "INFO", client_socket);
+        broadcast("[INFO] : " + username + " joined", client_socket);
     }
 
     while (true)
@@ -61,7 +60,7 @@ void handleClient(SOCKET client_socket)
             cerr << "Client disconnected.\n";
             {
                 lgm lock(client_mutex);
-                handle_broadcasting(username + " left", "INFO", client_socket);
+                broadcast("[INFO] : " + username + " left", client_socket);
                 removeClient(client_socket, username);
             }
             closesocket(client_socket);
