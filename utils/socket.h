@@ -19,16 +19,20 @@ public:
     Connection(SOCKET socket) : s(socket) {}
     Connection(SOCKET socket, string username) : s(socket), username(username) {}
 
+    // sends the message to connected client
     void _send(string message)
     {
         send(s, message.c_str(), message.size(), 0);
     }
 
-    void _send_to(string message, SOCKET socket)
+    // sends a message from the connected client to target client
+    void _send_to(string message, SOCKET target_client)
     {
-        send(socket, message.c_str(), message.size(), 0);
+        message = "[" + username + "] : " + message;
+        send(target_client, message.c_str(), message.size(), 0);
     }
 
+    // recieves from connected client
     psi _recieve()
     {
         char buffer[BUFFER_SIZE];
@@ -42,8 +46,11 @@ public:
         return result;
     }
 
+    // broadcast from connected client to other connected clients
     void broadcast(string message, vS sockets = clients)
     {
+        lgm lock(client_mutex);
+        message = "[" + username + "] : " + message;
         for (SOCKET client : sockets)
         {
             if (client != s)
@@ -51,6 +58,7 @@ public:
         }
     }
 
+    // close the connection
     void close()
     {
         {
@@ -63,6 +71,7 @@ public:
         closesocket(s);
     }
 
+    // close the connection after sending a message to connected client
     void close(string message)
     {
         _send(message);

@@ -1,6 +1,6 @@
+#include <fstream>
 #include "../headers/common.h"
 #include "../headers/namespace.h"
-#include <fstream>
 
 typedef map<string, string> mss;
 

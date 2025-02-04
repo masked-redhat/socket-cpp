@@ -1,9 +1,8 @@
 #include "../headers/common.h"
-#include "../headers/networking.h"
 #include "../headers/concurrency.h"
-#include "../headers/namespace.h"
 #include "../headers/setup.h"
 #include "../utils/socket.h"
+#include "../headers/namespace.h"
 
 void handle_create_group(string &group_name, Connection &conn)
 {
@@ -100,10 +99,7 @@ void handle_group_message(string &data, Connection &conn)
         auto it = find(members.begin(), members.end(), conn.s);
 
         if (it != members.end())
-        {
-            string message = "[" + conn.username + "] : " + msg;
-            conn.broadcast(message, members);
-        }
+            conn.broadcast(msg, members);
         else
             conn._send("You are not in the group");
     }
