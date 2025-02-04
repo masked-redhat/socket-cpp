@@ -72,7 +72,13 @@ public:
     {
         db.remove_user(s);
         db.remove_user(username);
+
+// close socket
+#ifdef _WIN32
         closesocket(s);
+#else
+        close(s);
+#endif
     }
 
     // close the connection after sending a message to connected client
@@ -81,7 +87,13 @@ public:
         send_(message);
         db.remove_user(s);
         db.remove_user(username);
+
+// close socket
+#ifdef _WIN32
         closesocket(s);
+#else
+        close(s);
+#endif
     }
 };
 
