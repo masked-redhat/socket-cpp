@@ -28,7 +28,7 @@ bool authenticate(Connection &conn)
     if (db.is_connected(username))
     {
         cerr << "Client disconnected.\n";
-        conn.close("User already connected.");
+        conn.close_("User already connected.");
         return false;
     }
 
@@ -38,14 +38,14 @@ bool authenticate(Connection &conn)
     if (!db.authenticate_user(username, password))
     {
         cerr << "Client disconnected.\n";
-        conn.close("Authentication failed.");
+        conn.close_("Authentication failed.");
         return false;
     }
 
     if (db.is_connected(username))
     {
         cerr << "Client disconnected.\n";
-        conn.close("User already connected.");
+        conn.close_("User already connected.");
         return false;
     }
 
@@ -69,7 +69,7 @@ void handle_client(Connection conn)
         {
             cerr << "Client disconnected.\n";
             conn.broadcast("[INFO] : " + conn.username + " left");
-            conn.close();
+            conn.close_();
             return;
         }
 
@@ -87,7 +87,7 @@ void handle_client(Connection conn)
         // Exit or Invalid endpoints
         if (endpoint == "/exit")
         {
-            conn.close();
+            conn.close_();
             return;
         }
         else
@@ -183,11 +183,11 @@ int main()
     while (true)
     {
         sockaddr_in client_addr{};
-        int client_addr_len = sizeof(client_addr);
 
 // client socket
 #ifdef _WIN32
 
+        int client_addr_len = sizeof(client_addr);
         SOCKET client_socket = accept(server_socket, (sockaddr *)&client_addr, &client_addr_len);
         if (client_socket == INVALID_SOCKET)
         {
@@ -197,6 +197,7 @@ int main()
 
 #else
 
+        socklen_t client_addr_len = sizeof(client_addr);
         int client_socket = accept(server_socket, (sockaddr *)&client_addr, &client_addr_len);
         if (client_socket == -1)
         {

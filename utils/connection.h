@@ -78,7 +78,7 @@ public:
     }
 
     // close the connection
-    void close()
+    void close_()
     {
         broadcast(username + " has left the chat.");
         db.remove_user(s);
@@ -93,7 +93,7 @@ public:
     }
 
     // close the connection after sending a message to connected client
-    void close(string message)
+    void close_(string message)
     {
         send_(message);
         broadcast(username + " has left the chat.");

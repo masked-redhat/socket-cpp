@@ -15,7 +15,7 @@ void handle_server_messages(Connection &conn)
         {
             lock_guard<mutex> lock(cout_mutex);
             cout << "Disconnected from server." << endl;
-            conn.close();
+            conn.close_();
             exit(0);
         }
         lock_guard<mutex> lock(cout_mutex);
@@ -151,7 +151,7 @@ int main()
 
         if (message == "/exit")
         {
-            conn.close();
+            conn.close_();
             break;
         }
     }

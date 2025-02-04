@@ -53,9 +53,7 @@ public:
 
     void add_user(SOCKET s, string username)
     {
-        lock(users_connected_mutex, usernames_connected_mutex);
-        lgm lock(users_connected_mutex, adopt_lock);
-        lgm lock(usernames_connected_mutex, adopt_lock);
+        scoped_lock lock(users_connected_mutex, usernames_connected_mutex);
 
         users_connected.insert(s);
         usernames_connected[username] = s;
@@ -77,9 +75,7 @@ public:
 
     void remove_user(SOCKET s, string username)
     {
-        lock(users_connected_mutex, usernames_connected_mutex);
-        lgm lock(users_connected_mutex, adopt_lock);
-        lgm lock(usernames_connected_mutex, adopt_lock);
+        scoped_lock lock(users_connected_mutex, usernames_connected_mutex);
 
         users_connected.erase(s);
         usernames_connected.erase(username);
@@ -88,7 +84,7 @@ public:
     SOCKET get_socket(string username)
     {
         lgm lock(usernames_connected_mutex);
-        
+
         return usernames_connected[username];
     }
 
