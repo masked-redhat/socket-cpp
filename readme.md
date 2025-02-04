@@ -195,7 +195,7 @@ Feel free to contribute by opening issues or pull requests!
 
 ## 🏆 Credits
 
-This project is part of **CS425: Computer Networks** at IIT Kanpur, developed by Kartikey's Team.
+This project is part of **CS425: Computer Networks** at IIT Kanpur, developed by **Kartikey's Team**.
 
 ### Team Members
 
