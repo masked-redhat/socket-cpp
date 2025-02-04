@@ -5,74 +5,64 @@
 #include "../headers/namespace.h"
 #include "../headers/utils.h"
 
-void handle_create_group(map<string, vector<SOCKET>> &groups, string &group_name, SOCKET &clientSocket, mutex &clientMutex)
+void handle_create_group(map<string, vector<SOCKET>> &groups, string &group_name, SOCKET &client_socket, mutex &client_mutex)
 {
     if (groups.find(group_name) == groups.end() || groups.size() == 0)
     {
         {
-            lock_guard<mutex> lock(clientMutex);
+            lock_guard<mutex> lock(client_mutex);
             vector<SOCKET> members;
-            members.push_back(clientSocket);
+            members.push_back(client_socket);
             groups[group_name] = members;
         }
 
-        string message = "Group created";
-        _send(message, clientSocket);
+        _send("Group created", client_socket);
     }
     else
-    {
-        string message = "Group name not available";
-        _send(message, clientSocket);
-    }
+        _send("Group name not available", client_socket);
 }
 
-void handle_join_group(map<string, vector<SOCKET>> &groups, string &group_name, SOCKET &clientSocket, mutex &clientMutex)
+void handle_join_group(map<string, vector<SOCKET>> &groups, string &group_name, SOCKET &client_socket, mutex &client_mutex)
 {
 
     if (groups.find(group_name) != groups.end())
     {
         vector<SOCKET> members;
         {
-            lock_guard<mutex> lock(clientMutex);
+            lock_guard<mutex> lock(client_mutex);
             members = groups[group_name];
 
             for (auto x : members)
-                if (x == clientSocket)
+                if (x == client_socket)
                 {
-                    string message = "You are already in this group";
-                    send(clientSocket, message.c_str(), message.size(), 0);
+                    _send("You are already in this group", client_socket);
                     return;
                 }
 
-            members.push_back(clientSocket);
+            members.push_back(client_socket);
             groups[group_name] = members;
         }
 
-        string message = "you have joined the group";
-        _send(message, clientSocket);
+        _send("you have joined the group", client_socket);
     }
     else
-    {
-        string message = "Group does not exist";
-        _send(message, clientSocket);
-    }
+        _send("Group does not exist", client_socket);
 }
 
-void handle_leave_group(map<string, vector<SOCKET>> &groups, string &group_name, SOCKET &clientSocket, mutex &clientMutex)
+void handle_leave_group(map<string, vector<SOCKET>> &groups, string &group_name, SOCKET &client_socket, mutex &client_mutex)
 {
     if (groups.find(group_name) != groups.end())
     {
         vector<SOCKET> members;
         {
-            lock_guard<mutex> lock(clientMutex);
+            lock_guard<mutex> lock(client_mutex);
             members = groups[group_name];
 
-            auto it = find(members.begin(), members.end(), clientSocket);
+            auto it = find(members.begin(), members.end(), client_socket);
 
             if (it == members.end())
             {
-                string message = "You are not in the group";
-                _send(message, clientSocket);
+                _send("You are not in the group", client_socket);
                 return;
             }
 
@@ -80,55 +70,44 @@ void handle_leave_group(map<string, vector<SOCKET>> &groups, string &group_name,
             groups[group_name] = members;
         }
 
-        string message = "you have left the group";
-        _send(message, clientSocket);
+        _send("you have left the group", client_socket);
     }
     else
-    {
-        string message = "Group does not exist";
-        _send(message, clientSocket);
-    }
+        _send("Group does not exist", client_socket);
 }
 
-void handle_group_message(map<string, vector<SOCKET>> &groups, string &data, string &username, SOCKET &clientSocket, mutex &clientMutex)
+void handle_group_message(map<string, vector<SOCKET>> &groups, string &data, string &username, SOCKET &client_socket, mutex &client_mutex)
 {
     string group_name, msg;
-    for (int i = 0; i < data.length(); i++)
-        if (data[i] == ' ')
-        {
-            group_name = data.substr(0, i);
-            msg = data.substr(i + 1);
-            break;
-        }
+    auto it = data.find(" ");
+    if (it != string::npos)
+    {
+        group_name = data.substr(0, it);
+        msg = data.substr(it + 1);
+    }
 
     if (groups.find(group_name) != groups.end())
     {
         vector<SOCKET> members;
         {
-            lock_guard<mutex> lock(clientMutex);
+            lock_guard<mutex> lock(client_mutex);
             members = groups[group_name];
 
-            auto it = find(members.begin(), members.end(), clientSocket);
+            auto it = find(members.begin(), members.end(), client_socket);
 
             if (it != members.end())
             {
                 string message = "[" + username + "] : " + msg;
                 for (SOCKET client : members)
                 {
-                    if (client != clientSocket)
+                    if (client != client_socket)
                         _send(message, client);
                 }
             }
             else
-            {
-                string message = "You are not in the group";
-                _send(message, clientSocket);
-            }
+                _send("You are not in the group", client_socket);
         }
     }
     else
-    {
-        string message = "Group does not exist";
-        _send(message, clientSocket);
-    }
+        _send("Group does not exist", client_socket);
 }
