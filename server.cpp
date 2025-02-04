@@ -155,7 +155,7 @@ int main()
         Connection conn = Connection(client_socket);
 
         // Start a thread to handle the client
-        thread(handleClient, conn).detach();
+        thread(handleClient, ref(conn)).detach();
     }
 
     // Clean up
