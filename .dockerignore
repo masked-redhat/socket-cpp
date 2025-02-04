@@ -1,0 +1,20 @@
+# docker
+Dockerfile
+.dockerignore
+docker-compose.yml
+
+# system and env files
+.vscode
+.sh
+
+# exe files
+*.exe
+*.out
+
+# Classroom code
+Homework*
+classroom*
+cs425*
+
+# env files
+*.env
