@@ -3,7 +3,6 @@
 #include "../headers/networking.h"
 #include "../headers/concurrency.h"
 #include "../headers/namespace.h"
-#include <algorithm>
 
 void handle_create_group(map<string, vector<SOCKET>> &groups, string &group_name, SOCKET &clientSocket, mutex &clientMutex)
 {

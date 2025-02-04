@@ -14,28 +14,12 @@ mss users = load_users();           // load users
 map<string, SOCKET> users_socket;   // username: socket for private messaging
 map<string, vector<SOCKET>> groups; // group management
 
-void removeClient(SOCKET clientSocket)
+void removeClient(SOCKET &clientSocket, string &username)
 {
-    vector<SOCKET>::iterator first = clients.begin();
-    vector<SOCKET>::iterator end = clients.end();
+    auto it = find(clients.begin(), clients.end(), clientSocket);
+    clients.erase(it);
 
-    while (first != end)
-    {
-        if (*first == clientSocket)
-        {
-            clients.erase(first, first);
-            break;
-        }
-        first++;
-    }
-
-    string username = "";
-    for (auto x : users_socket)
-        if (x.second == clientSocket)
-            username = x.first;
-
-    if (username != "")
-        users_socket.erase(username);
+    users_socket.erase(username); // erase socket from username:socket map
 }
 
 void handleClient(SOCKET clientSocket)
@@ -55,7 +39,7 @@ void handleClient(SOCKET clientSocket)
         send(clientSocket, message.c_str(), message.size(), 0);
         {
             lock_guard<mutex> lock(clientMutex);
-            removeClient(clientSocket);
+            removeClient(clientSocket, username);
         }
         closesocket(clientSocket);
         return;
@@ -88,7 +72,7 @@ void handleClient(SOCKET clientSocket)
             cerr << "Client disconnected.\n";
             {
                 lock_guard<mutex> lock(clientMutex);
-                removeClient(clientSocket);
+                removeClient(clientSocket, username);
                 handle_broadcasting(username + " left", "INFO", clients, clientMutex, clientSocket);
             }
             closesocket(clientSocket);
@@ -123,7 +107,7 @@ void handleClient(SOCKET clientSocket)
         {
             {
                 lock_guard<mutex> lock(clientMutex);
-                removeClient(clientSocket);
+                removeClient(clientSocket, username);
             }
             closesocket(clientSocket);
             return;
