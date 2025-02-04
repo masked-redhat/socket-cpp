@@ -2,6 +2,7 @@
 #include "./headers/networking.h" // socket libs
 #include "./headers/types.h"      // types (psi)
 #include "./utils/connection.h"   // connection class for socket
+#include "./constants/env.h"      // load env variables
 #include "./headers/namespace.h"  // namespaces
 
 mutex cout_mutex;
@@ -57,9 +58,11 @@ int main()
 
 #endif
 
+    string server_port = get_env("PORT", "3000"); // default to 3000
+
     sockaddr_in server_address{};
-    server_address.sin_family = AF_INET;   // IPv4
-    server_address.sin_port = htons(3000); // Port 3000
+    server_address.sin_family = AF_INET;                // IPv4
+    server_address.sin_port = htons(stoi(server_port)); // Port
 
 // connect to server
 #ifdef _WIN32
