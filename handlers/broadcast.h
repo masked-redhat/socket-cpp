@@ -1,5 +1,5 @@
 #include "../headers/common.h"    // string
-#include "../utils/socket.h"      // connection
+#include "../utils/connection.h"  // connection
 #include "../headers/namespace.h" // namespace
 
 void handle_broadcasting(const string &data, Connection &conn)

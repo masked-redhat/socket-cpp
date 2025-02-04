@@ -1,5 +1,5 @@
 #include "../headers/common.h"    // string
-#include "../utils/socket.h"      // connection
+#include "../utils/connection.h"  // connection
 #include "../constants/db.h"      // database
 #include "../utils/utils.h"       // utility fns
 #include "../headers/namespace.h" // namespace
