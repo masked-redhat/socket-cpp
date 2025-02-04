@@ -8,8 +8,8 @@
 
 bool authenticate(Connection &conn)
 {
-    conn._send("Enter username: ");
-    string username = conn._recieve().first;
+    conn.send_("Enter username: ");
+    string username = conn.recieve().first;
 
     if (users_socket[username] != 0)
     {
@@ -17,8 +17,8 @@ bool authenticate(Connection &conn)
         return false;
     }
 
-    conn._send("Enter password: ");
-    string password = conn._recieve().first;
+    conn.send_("Enter password: ");
+    string password = conn.recieve().first;
     if (users[username] != password)
     {
         conn.close("Authentication failed");
@@ -27,7 +27,7 @@ bool authenticate(Connection &conn)
     else
     {
         conn.username = username;
-        conn._send("Authentication success");
+        conn.send_("Authentication success");
         {
             lgm lock(client_mutex);
             users_socket[username] = conn.s;
@@ -38,10 +38,8 @@ bool authenticate(Connection &conn)
     return true;
 }
 
-void handleClient(SOCKET client_socket)
+void handleClient(Connection &conn)
 {
-    Connection conn = Connection(client_socket);
-
     bool authenticated = authenticate(conn);
 
     if (!authenticated)
@@ -49,7 +47,7 @@ void handleClient(SOCKET client_socket)
 
     while (true)
     {
-        psi recieved = conn._recieve();
+        psi recieved = conn.recieve();
         if (recieved.second <= 0) // bytes recieved
         {
             cerr << "Client disconnected.\n";
@@ -111,7 +109,7 @@ int main()
     // Configure the server address
     sockaddr_in serverAddr{};
     serverAddr.sin_family = AF_INET;         // IPv4
-    serverAddr.sin_port = htons(3000);       // Port 12345
+    serverAddr.sin_port = htons(3000);       // Port 3000
     serverAddr.sin_addr.s_addr = INADDR_ANY; // Bind to all interfaces
 
     // Bind the socket to the address and port
@@ -154,9 +152,10 @@ int main()
         }
 
         cout << "New client connected.\n";
+        Connection conn = Connection(client_socket);
 
         // Start a thread to handle the client
-        thread(handleClient, client_socket).detach();
+        thread(handleClient, conn).detach();
     }
 
     // Clean up

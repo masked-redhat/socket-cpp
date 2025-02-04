@@ -20,20 +20,20 @@ public:
     Connection(SOCKET socket, string username) : s(socket), username(username) {}
 
     // sends the message to connected client
-    void _send(string message)
+    void send_(string message)
     {
         send(s, message.c_str(), message.size(), 0);
     }
 
     // sends a message from the connected client to target client
-    void _send_to(string message, SOCKET target_client)
+    void send_to(string message, SOCKET target_client)
     {
         message = "[" + username + "] : " + message;
         send(target_client, message.c_str(), message.size(), 0);
     }
 
     // recieves from connected client
-    psi _recieve()
+    psi recieve()
     {
         char buffer[BUFFER_SIZE];
         memset(buffer, 0, sizeof(buffer)); // reset buffer
@@ -85,7 +85,7 @@ public:
     // close the connection after sending a message to connected client
     void close(string message)
     {
-        _send(message);
+        send_(message);
         {
             lgm lock(client_mutex);
             auto it = find(clients.begin(), clients.end(), s);

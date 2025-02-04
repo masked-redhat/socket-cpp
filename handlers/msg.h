@@ -14,11 +14,11 @@ void handle_private_msg(string &data, Connection &conn)
         if (users_socket.find(_username) != users_socket.end())
         {
             SOCKET rec_socket = users_socket[_username];
-            conn._send_to(msg, rec_socket);
+            conn.send_to(msg, rec_socket);
         }
         else
-            conn._send("User does not exist, or not in connection");
+            conn.send_("User does not exist, or not in connection");
     }
     else
-        conn._send("Data not given in good format");
+        conn.send_("Data not given in good format");
 }

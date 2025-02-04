@@ -15,10 +15,10 @@ void handle_create_group(string &group_name, Connection &conn)
             groups[group_name] = members;
         }
 
-        conn._send("Group created");
+        conn.send_("Group created");
     }
     else
-        conn._send("Group name not available");
+        conn.send_("Group name not available");
 }
 
 void handle_join_group(string &group_name, Connection &conn)
@@ -39,15 +39,15 @@ void handle_join_group(string &group_name, Connection &conn)
             }
             else
             {
-                conn._send("You are already in this group");
+                conn.send_("You are already in this group");
                 return;
             }
         }
 
-        conn._send("you have joined the group");
+        conn.send_("you have joined the group");
     }
     else
-        conn._send("Group does not exist");
+        conn.send_("Group does not exist");
 }
 
 void handle_leave_group(string &group_name, Connection &conn)
@@ -67,15 +67,15 @@ void handle_leave_group(string &group_name, Connection &conn)
             }
             else
             {
-                conn._send("You are not in the group");
+                conn.send_("You are not in the group");
                 return;
             }
         }
 
-        conn._send("you have left the group");
+        conn.send_("you have left the group");
     }
     else
-        conn._send("Group does not exist");
+        conn.send_("Group does not exist");
 }
 
 void handle_group_message(string &data, Connection &conn)
@@ -101,8 +101,8 @@ void handle_group_message(string &data, Connection &conn)
         if (it != members.end())
             conn.broadcast_by(msg, members);
         else
-            conn._send("You are not in the group");
+            conn.send_("You are not in the group");
     }
     else
-        conn._send("Group does not exist");
+        conn.send_("Group does not exist");
 }
