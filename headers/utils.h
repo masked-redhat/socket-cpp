@@ -2,5 +2,6 @@
 #define UTILS_H
 
 #include "../utils/send_message.h"
+#include "../utils/recieve_message.h"
 
 #endif

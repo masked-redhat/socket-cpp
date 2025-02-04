@@ -4,9 +4,8 @@
 #include "./headers/networking.h"  // socket libs
 #include "./headers/handlers.h"    // handlers
 #include "./headers/namespace.h"   // namespaces
+#include "./headers/utils.h"       // utility functions
 #include "file.h"                  // load users
-
-#define BUFFER_SIZE 1024
 
 mutex clientMutex;
 vector<SOCKET> clients;             // To store connected client sockets
@@ -24,14 +23,11 @@ void removeClient(SOCKET &clientSocket, string &username)
 
 void handleClient(SOCKET clientSocket)
 {
-    char buffer[BUFFER_SIZE];
     string username;
     string message = "Enter username: ";
 
-    memset(buffer, 0, BUFFER_SIZE);
     _send(message, clientSocket);
-    recv(clientSocket, buffer, BUFFER_SIZE, 0);
-    username = buffer;
+    username = _recieve(clientSocket).first;
 
     if (users_socket[username] != 0)
     {
@@ -46,10 +42,9 @@ void handleClient(SOCKET clientSocket)
     }
 
     message = "Enter password: ";
-    memset(buffer, 0, BUFFER_SIZE);
     _send(message, clientSocket);
-    recv(clientSocket, buffer, BUFFER_SIZE, 0);
-    if (users[username] != buffer)
+    string password = _recieve(clientSocket).first;
+    if (users[username] != password)
         message = "Authentication failed";
     else
     {
@@ -65,9 +60,9 @@ void handleClient(SOCKET clientSocket)
 
     while (true)
     {
-        memset(buffer, 0, sizeof(buffer));
-        int bytesRead = recv(clientSocket, buffer, sizeof(buffer) - 1, 0);
-        if (bytesRead <= 0)
+        psi recieved = _recieve(clientSocket);
+        int bytes_read = recieved.second;
+        if (bytes_read <= 0)
         {
             cerr << "Client disconnected.\n";
             {
@@ -79,16 +74,13 @@ void handleClient(SOCKET clientSocket)
             return;
         }
 
-        string message = string(buffer);
+        string message = recieved.first;
         string endpoint, data;
-        for (int i = 0; buffer[i] != '\0'; i++)
+        auto it = message.find(" ");
+        if (it != string::npos)
         {
-            if (buffer[i] == ' ')
-            {
-                endpoint = message.substr(0, i);
-                data = message.substr(i + 1);
-                break;
-            }
+            endpoint = message.substr(0, it);
+            data = message.substr(it + 1);
         }
 
         if (endpoint == "/msg")
