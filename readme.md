@@ -8,16 +8,37 @@ This project implements a multi-threaded chat server that supports private messa
 
 ## 🔹 Features
 
-- **User Authentication** (based on `users.txt`)
-- **Private Messaging** (`/msg <username> <message>`)
-- **Broadcast Messaging** (`/broadcast <message>`)
-- **Group Management**
-  - `/create_group <group_name>` - Create a group.
-  - `/join_group <group_name>` - Join a group.
-  - `/leave_group <group_name>` - Leave a group.
-  - `/group_msg <group_name> <message>` - Send a message to a group.
-- **Thread-safe Client Management** using `std::mutex`
-- **Cross-platform Support** (Windows & Linux)
+## **Features**
+
+1.  **User Authentication** :
+
+    - Users are authenticated using a `users.txt` file containing usernames and passwords.
+    - Clients must provide valid credentials to connect to the server.
+
+2.  **Messaging Features** :
+
+    - **Broadcast** : Send messages to all connected clients using `/broadcast <message>`.
+    - **Private Messages** : Send direct messages to specific users using `/msg <username> <message>`.
+    - **Group Messaging** : Send messages to all members of a group using `/group_msg <group name> <message>`.
+
+3.  **Group Management** :
+
+    - Create groups using `/create_group <group name>`.
+    - Join groups using `/join_group <group name>`.
+    - Leave groups using `/leave_group <group name>`.
+
+4.  **Multi-threading** :
+
+    - The server handles multiple concurrent client connections using threads.
+
+5.  **Thread Safety** :
+
+    - Shared resources (e.g., user lists, group memberships) are protected using mutex locks to ensure thread-safe access.
+
+6.  **Cross Platform Support** :
+
+    - Windows and Unix/Linux system supported
+    - Application dockerized to remove system dependency
 
 ---
 
