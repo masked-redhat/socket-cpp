@@ -8,6 +8,8 @@
 #ifndef DATABASE
 #define DATABASE
 
+// users socket and usernames/groups database
+// for this small socket application
 class Database
 {
 private:

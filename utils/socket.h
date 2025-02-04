@@ -10,6 +10,8 @@
 
 #define BUFFER_SIZE 1024
 
+// socket connection class
+// containing socket and username information
 class Connection
 {
 public:

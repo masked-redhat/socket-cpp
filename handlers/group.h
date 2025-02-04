@@ -1,6 +1,7 @@
 #include "../headers/common.h"    // string
 #include "../utils/socket.h"      // connection
 #include "../constants/db.h"      // database
+#include "../utils/utils.h"       // utility fns
 #include "../headers/namespace.h" // namespace
 
 void handle_create_group(string &group_name, Connection &conn)
@@ -49,20 +50,17 @@ void handle_leave_group(string &group_name, Connection &conn)
 void handle_group_message(string &data, Connection &conn)
 {
     string group_name, msg;
-    auto it = data.find(" ");
-    if (it != string::npos)
-    {
-        group_name = data.substr(0, it);
-        msg = data.substr(it + 1);
-    }
+    separate_string(data, group_name, msg);
 
     if (db.is_group(group_name))
     {
-        if (!db.inside_group(group_name, conn.s))
+        if (db.inside_group(group_name, conn.s))
+        {
+            sS members = db.get_group_members(group_name);
+            conn.broadcast_by(msg, members);
+        }
+        else
             conn.send_("You are not in the group");
-
-        sS members = db.get_group_members(group_name);
-        conn.broadcast_by(msg, members);
     }
     else
         conn.send_("Group does not exist");

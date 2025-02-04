@@ -1,6 +1,7 @@
 #include "./headers/common.h"
 #include "./headers/networking.h" // socket libs
 #include "./utils/socket.h"       // socket utility fns
+#include "./utils/utils.h"        // utility fns
 #include "./constants/db.h"       // current db
 #include "./handlers/msg.h"       // handlers private message
 #include "./handlers/group.h"     // handlers group message
@@ -52,15 +53,8 @@ void handleClient(Connection conn)
             return;
         }
 
-        string message = recieved.first;
         string endpoint, data;
-
-        auto it = message.find(" ");
-        if (it != string::npos)
-        {
-            endpoint = message.substr(0, it);
-            data = message.substr(it + 1);
-        }
+        separate_string(recieved.first, endpoint, data);
 
         if (endpoint == "/msg")
             handle_private_msg(data, conn);

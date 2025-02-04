@@ -8,7 +8,7 @@
 
 mss load_users()
 {
-    ifstream f("./constants/users.txt");
+    ifstream f("./constants/users.txt"); // load file
 
     mss users;
 
