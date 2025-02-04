@@ -3,6 +3,7 @@
 #include "./utils/connection.h"   // connection class for socket
 #include "./utils/utils.h"        // utility fns
 #include "./constants/db.h"       // current db
+#include "./constants/env.h"      // env
 #include "./handlers/msg.h"       // handlers private message
 #include "./handlers/broadcast.h" // handlers broadcast message
 #include "./handlers/group.h"     // handlers group message
@@ -130,10 +131,12 @@ int main()
 
 #endif
 
+    string port = get_env("PORT", "3000");
+
     // configure the server address
     sockaddr_in server_addr{};
     server_addr.sin_family = AF_INET;         // IPv4
-    server_addr.sin_port = htons(3000);       // Port 3000
+    server_addr.sin_port = htons(stoi(port)); // Port 3000
     server_addr.sin_addr.s_addr = INADDR_ANY; // Bind to all interfaces
 
 // bind and listen
@@ -177,7 +180,7 @@ int main()
 
 #endif
 
-    cout << "Server is listening on port 3000...\n";
+    cout << "Server is listening on port " << port << " ...\n ";
 
     // accept and handle client connections
     while (true)

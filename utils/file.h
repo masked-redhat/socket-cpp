@@ -1,5 +1,6 @@
 #include "../headers/common.h"
 #include "../headers/types.h"
+#include "../constants/env.h"
 #include "../headers/namespace.h"
 
 #ifndef LOADFILE
@@ -7,7 +8,8 @@
 
 mss load_users()
 {
-    ifstream f("constants/users.txt"); // load file
+    string file_loc = get_env("FILE_LOC", "constants/users.txt");
+    ifstream f(file_loc); // load file
 
     mss users;
 

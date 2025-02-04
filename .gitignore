@@ -10,3 +10,6 @@ cs425*
 # executable files
 *.exe
 *.out
+
+# env file
+*.env
