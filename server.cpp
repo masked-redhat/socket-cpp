@@ -4,6 +4,7 @@
 #include "./utils/utils.h"        // utility fns
 #include "./constants/db.h"       // current db
 #include "./handlers/msg.h"       // handlers private message
+#include "./handlers/broadcast.h" // handlers broadcast message
 #include "./handlers/group.h"     // handlers group message
 #include "./headers/namespace.h"  // namespaces
 
@@ -66,7 +67,7 @@ void handleClient(Connection conn)
         if (endpoint == "/msg")
             handle_private_msg(data, conn);
         else if (endpoint == "/broadcast")
-            conn.broadcast_by(data, db.get_clients());
+            handle_broadcasting(data, conn);
         else if (endpoint == "/create_group")
             handle_create_group(data, conn);
         else if (endpoint == "/join_group")
@@ -80,6 +81,8 @@ void handleClient(Connection conn)
             conn.close();
             return;
         }
+        else
+            conn.send_("[INFO] : No endpoint like that");
     }
 }
 
