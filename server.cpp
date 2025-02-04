@@ -3,67 +3,58 @@
 #include "./headers/networking.h"  // socket libs
 #include "./headers/handlers.h"    // handlers
 #include "./headers/namespace.h"   // namespaces
-#include "./headers/utils.h"       // utility functions
+#include "./utils/socket.h"        // socket utility fns
 #include "./headers/setup.h"       // constant variables
 
-void removeClient(SOCKET &client_socket, string &username)
+bool authenticate(Connection &conn)
 {
-    auto it = find(clients.begin(), clients.end(), client_socket);
-    clients.erase(it);
+    conn._send("Enter username: ");
+    string username = conn._recieve().first;
 
-    users_socket.erase(username); // erase socket from username:socket map
+    if (users_socket[username] != 0)
+    {
+        conn.close("User already exist in connection");
+        return;
+    }
+
+    conn._send("Enter password: ");
+    string password = conn._recieve().first;
+    if (users[username] != password)
+    {
+        conn.close("Authentication failed");
+        return false;
+    }
+    else
+    {
+        conn.username = username;
+        conn._send("Authentication success");
+        {
+            lgm lock(client_mutex);
+            users_socket[username] = conn.s;
+        }
+        conn.broadcast("[INFO] : " + username + " joined");
+    }
+
+    return true;
 }
 
 void handleClient(SOCKET client_socket)
 {
-    _send("Enter username: ", client_socket);
-    string username = _recieve(client_socket).first;
+    Connection conn = Connection(client_socket);
 
-    if (users_socket[username] != 0)
-    {
-        _send("User already exist in connection", client_socket);
-        {
-            lgm lock(client_mutex);
-            removeClient(client_socket, username);
-        }
-        closesocket(client_socket);
-        return;
-    }
+    bool authenticated = authenticate(conn);
 
-    _send("Enter password: ", client_socket);
-    string password = _recieve(client_socket).first;
-    if (users[username] != password)
-    {
-        _send("Authentication failed", client_socket);
-        {
-            lgm lock(client_mutex);
-            removeClient(client_socket, username);
-        }
-        closesocket(client_socket);
+    if (!authenticated)
         return;
-    }
-    else
-    {
-        _send("Authentication success", client_socket);
-        {
-            lgm lock(client_mutex);
-            users_socket[username] = client_socket;
-        }
-        broadcast("[INFO] : " + username + " joined", client_socket);
-    }
 
     while (true)
     {
-        psi recieved = _recieve(client_socket);
+        psi recieved = conn._recieve();
         if (recieved.second <= 0) // bytes recieved
         {
             cerr << "Client disconnected.\n";
-            {
-                lgm lock(client_mutex);
-                broadcast("[INFO] : " + username + " left", client_socket);
-                removeClient(client_socket, username);
-            }
-            closesocket(client_socket);
+            conn.broadcast("[INFO] : " + conn.username + " left");
+            conn.close();
             return;
         }
 
@@ -78,24 +69,20 @@ void handleClient(SOCKET client_socket)
         }
 
         if (endpoint == "/msg")
-            handle_private_msg(data, username, client_socket);
+            handle_private_msg(data, conn);
         else if (endpoint == "/broadcast")
-            handle_broadcasting(data, username, client_socket);
+            handle_broadcasting(data, conn);
         else if (endpoint == "/create_group")
-            handle_create_group(data, client_socket);
+            handle_create_group(data, conn);
         else if (endpoint == "/join_group")
-            handle_join_group(data, client_socket);
+            handle_join_group(data, conn);
         else if (endpoint == "/leave_group")
-            handle_leave_group(data, client_socket);
+            handle_leave_group(data, conn);
         else if (endpoint == "/group_msg")
-            handle_group_message(data, username, client_socket);
+            handle_group_message(data, conn);
         else if (endpoint == "/exit")
         {
-            {
-                lgm lock(client_mutex);
-                removeClient(client_socket, username);
-            }
-            closesocket(client_socket);
+            conn.close();
             return;
         }
     }

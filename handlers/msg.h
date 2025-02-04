@@ -1,10 +1,10 @@
 #include "../headers/common.h"
 #include "../headers/networking.h"
 #include "../headers/namespace.h"
-#include "../headers/utils.h"
 #include "../headers/setup.h"
+#include "../utils/socket.h"
 
-void handle_private_msg(string &data, string &username, SOCKET &client_socket)
+void handle_private_msg(string &data, Connection&conn)
 {
     string _username, msg;
     auto it = data.find(" ");
@@ -15,15 +15,15 @@ void handle_private_msg(string &data, string &username, SOCKET &client_socket)
 
         if (users_socket.find(_username) != users_socket.end())
         {
-            msg = "[" + username + "] : " + msg; // update message with the sender's username
+            msg = "[" + conn.username + "] : " + msg; // update message with the sender's username
 
             SOCKET rec_socket = users_socket[_username];
 
-            _send(msg, rec_socket);
+            conn._send_to(msg, rec_socket);
         }
         else
-            _send("User does not exist, or not in connection", client_socket);
+            conn._send("User does not exist, or not in connection");
     }
     else
-        _send("Data not given in good format", client_socket);
+        conn._send("Data not given in good format");
 }

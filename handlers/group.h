@@ -2,27 +2,27 @@
 #include "../headers/networking.h"
 #include "../headers/concurrency.h"
 #include "../headers/namespace.h"
-#include "../headers/utils.h"
 #include "../headers/setup.h"
+#include "../utils/socket.h"
 
-void handle_create_group(string &group_name, SOCKET &client_socket)
+void handle_create_group(string &group_name, Connection &conn)
 {
     if (groups.find(group_name) == groups.end() || groups.size() == 0)
     {
         {
             lgm lock(client_mutex);
             vS members;
-            members.push_back(client_socket);
+            members.push_back(conn.s);
             groups[group_name] = members;
         }
 
-        _send("Group created", client_socket);
+        conn._send("Group created");
     }
     else
-        _send("Group name not available", client_socket);
+        conn._send("Group name not available");
 }
 
-void handle_join_group(string &group_name, SOCKET &client_socket)
+void handle_join_group(string &group_name, Connection &conn)
 {
 
     if (groups.find(group_name) != groups.end())
@@ -31,27 +31,27 @@ void handle_join_group(string &group_name, SOCKET &client_socket)
             lgm lock(client_mutex);
             vS members = groups[group_name];
 
-            auto it = find(members.begin(), members.end(), client_socket);
+            auto it = find(members.begin(), members.end(), conn.s);
 
             if (it != members.end())
             {
-                members.push_back(client_socket); // add client to members
-                groups[group_name] = members;     // update members
+                members.push_back(conn.s);    // add client to members
+                groups[group_name] = members; // update members
             }
             else
             {
-                _send("You are already in this group", client_socket);
+                conn._send("You are already in this group");
                 return;
             }
         }
 
-        _send("you have joined the group", client_socket);
+        conn._send("you have joined the group");
     }
     else
-        _send("Group does not exist", client_socket);
+        conn._send("Group does not exist");
 }
 
-void handle_leave_group(string &group_name, SOCKET &client_socket)
+void handle_leave_group(string &group_name, Connection &conn)
 {
     if (groups.find(group_name) != groups.end())
     {
@@ -59,7 +59,7 @@ void handle_leave_group(string &group_name, SOCKET &client_socket)
             lgm lock(client_mutex);
             vS members = groups[group_name];
 
-            auto it = find(members.begin(), members.end(), client_socket);
+            auto it = find(members.begin(), members.end(), conn.s);
 
             if (it != members.end())
             {
@@ -68,18 +68,18 @@ void handle_leave_group(string &group_name, SOCKET &client_socket)
             }
             else
             {
-                _send("You are not in the group", client_socket);
+                conn._send("You are not in the group");
                 return;
             }
         }
 
-        _send("you have left the group", client_socket);
+        conn._send("you have left the group");
     }
     else
-        _send("Group does not exist", client_socket);
+        conn._send("Group does not exist");
 }
 
-void handle_group_message(string &data, string &username, SOCKET &client_socket)
+void handle_group_message(string &data, Connection &conn)
 {
     string group_name, msg;
     auto it = data.find(" ");
@@ -97,16 +97,16 @@ void handle_group_message(string &data, string &username, SOCKET &client_socket)
             members = groups[group_name];
         }
 
-        auto it = find(members.begin(), members.end(), client_socket);
+        auto it = find(members.begin(), members.end(), conn.s);
 
         if (it != members.end())
         {
-            string message = "[" + username + "] : " + msg;
-            broadcast(message, client_socket, members);
+            string message = "[" + conn.username + "] : " + msg;
+            conn.broadcast(message, members);
         }
         else
-            _send("You are not in the group", client_socket);
+            conn._send("You are not in the group");
     }
     else
-        _send("Group does not exist", client_socket);
+        conn._send("Group does not exist");
 }
