@@ -57,7 +57,7 @@ bool authenticate(Connection &conn)
     return true;
 }
 
-void handleClient(Connection conn)
+void handle_client(Connection conn)
 {
     if (!authenticate(conn))
         return;
@@ -97,74 +97,135 @@ void handleClient(Connection conn)
 
 int main()
 {
-    WSADATA wsaData;
 
-    // Initialize Winsock
-    if (WSAStartup(MAKEWORD(2, 2), &wsaData) != 0)
+// create socket
+#ifdef _WIN32
+
+    // winsock initialization (windows)
+    WSADATA wsa_data;
+    if (WSAStartup(MAKEWORD(2, 2), &wsa_data) != 0)
     {
         cerr << "WSAStartup failed.\n";
         return -1;
     }
 
-    // Create the server socket
-    SOCKET serverSocket = socket(AF_INET, SOCK_STREAM, IPPROTO_TCP);
-    if (serverSocket == INVALID_SOCKET)
+    // create socket
+    SOCKET server_socket = socket(AF_INET, SOCK_STREAM, IPPROTO_TCP);
+    if (server_socket == INVALID_SOCKET)
     {
         cerr << "Error creating socket: " << WSAGetLastError() << "\n";
         WSACleanup();
         return -1;
     }
 
-    // Configure the server address
-    sockaddr_in serverAddr{};
-    serverAddr.sin_family = AF_INET;         // IPv4
-    serverAddr.sin_port = htons(3000);       // Port 3000
-    serverAddr.sin_addr.s_addr = INADDR_ANY; // Bind to all interfaces
+#else
 
-    // Bind the socket to the address and port
-    if (bind(serverSocket, (sockaddr *)&serverAddr, sizeof(serverAddr)) == SOCKET_ERROR)
+    // create socket
+    int server_socket = socket(AF_INET, SOCK_STREAM, 0);
+    if (server_socket == -1)
+    {
+        cerr << "Error creating socket.\n";
+        return -1;
+    }
+
+#endif
+
+    // configure the server address
+    sockaddr_in server_addr{};
+    server_addr.sin_family = AF_INET;         // IPv4
+    server_addr.sin_port = htons(3000);       // Port 3000
+    server_addr.sin_addr.s_addr = INADDR_ANY; // Bind to all interfaces
+
+// bind and listen
+#ifdef _WIN32
+
+    // bind the socket to the address and port
+    if (bind(server_socket, (sockaddr *)&server_addr, sizeof(server_addr)) == SOCKET_ERROR)
     {
         cerr << "Bind failed: " << WSAGetLastError() << "\n";
-        closesocket(serverSocket);
+        closesocket(server_socket);
         WSACleanup();
         return -1;
     }
 
-    // Start listening for connections
-    if (listen(serverSocket, SOMAXCONN) == SOCKET_ERROR)
+    // start listening for connections
+    if (listen(server_socket, SOMAXCONN) == SOCKET_ERROR)
     {
         cerr << "Listen failed: " << WSAGetLastError() << "\n";
-        closesocket(serverSocket);
+        closesocket(server_socket);
         WSACleanup();
         return -1;
     }
+
+#else
+
+    // bind the socket to the address and port
+    if (bind(server_socket, (sockaddr *)&server_addr, sizeof(server_addr)) == -1)
+    {
+        cerr << "Bind failed.\n";
+        close(server_socket);
+        return -1;
+    }
+
+    // start listening for connections
+    if (listen(server_socket, SOMAXCONN) == -1)
+    {
+        cerr << "Listen failed.\n";
+        close(server_socket);
+        return -1;
+    }
+
+#endif
 
     cout << "Server is listening on port 3000...\n";
 
-    // Accept and handle client connections
+    // accept and handle client connections
     while (true)
     {
-        sockaddr_in clientAddr{};
-        int clientAddrLen = sizeof(clientAddr);
+        sockaddr_in client_addr{};
+        int client_addr_len = sizeof(client_addr);
 
-        SOCKET client_socket = accept(serverSocket, (sockaddr *)&clientAddr, &clientAddrLen);
+// client socket
+#ifdef _WIN32
+
+        SOCKET client_socket = accept(server_socket, (sockaddr *)&client_addr, &client_addr_len);
         if (client_socket == INVALID_SOCKET)
         {
             cerr << "Accept failed: " << WSAGetLastError() << "\n";
             continue;
         }
 
-        // Add the client to the database
+#else
+
+        int client_socket = accept(server_socket, (sockaddr *)&client_addr, &client_addr_len);
+        if (client_socket == -1)
+        {
+            cerr << "Accept failed.\n";
+            continue;
+        }
+
+#endif
+
+        // add the client to the database
         db.add_user(client_socket);
 
         cout << "New client connected.\n";
 
-        // Start a thread to handle the client
-        thread(handleClient, Connection(client_socket)).detach();
+        // start a thread to handle the client
+        thread(handle_client, Connection(client_socket)).detach();
     }
 
-    // Clean up
-    closesocket(serverSocket);
+// clean up
+#ifdef _WIN32
+
+    closesocket(server_socket);
     WSACleanup();
+
+#else
+
+    close(server_socket);
+
+#endif
+
     return 0;
 }
