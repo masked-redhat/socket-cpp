@@ -126,6 +126,9 @@ public:
         if (groups.count(group_name) == 0)
             return false;
 
+        if (groups[group_name].count(s) == 0)
+            return false;
+
         groups[group_name].insert(s);
         return true;
     }
@@ -136,6 +139,9 @@ public:
         if (groups.count(group_name) == 0)
             return false;
 
+        if (groups[group_name].count(s) == 0)
+            return false;
+
         groups[group_name].erase(s);
         return true;
     }
@@ -143,8 +149,12 @@ public:
     bool inside_group(string group_name, SOCKET s)
     {
         lgm lock(db_mutex);
+        if (groups.count(group_name) == 0)
+            return false;
+
         if (groups[group_name].count(s) == 0)
             return false;
+
         return true;
     }
 
