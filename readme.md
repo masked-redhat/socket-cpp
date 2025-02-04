@@ -168,13 +168,16 @@ Welcome to the chat server!
 
 ### **3. `utils/connection.h` (Client Connection Class)**
 
-- **Manages socket communication** (send, receive, close).
-- **Handles broadcasting and direct messages.**
+- **Manages socket communication** (send, receive).
+- **Handles broadcasting and direct messages.** (broadcast).
+- **Ensures proper cleanup when disconnecting.** (close)
 
 ### **4. `utils/database.h` (User & Group Management)**
 
 - **Stores authenticated users and active groups.**
 - **Ensures thread-safe access using `std::mutex`.**
+- **Allows concurrent access to different parts of the database efficiently.**
+- **Handles authentication, client connections, and group management.**
 
 ### **5. `handlers/` (Message Handlers)**
 
