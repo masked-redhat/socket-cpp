@@ -4,22 +4,20 @@
 #include "../headers/namespace.h"
 #include "../headers/utils.h"
 
-void handle_private_msg(string &data, string &username, map<string, SOCKET> &users_socket)
+void handle_private_msg(string &data, string &username, map<string, SOCKET> &users_socket, SOCKET &client_socket)
 {
     string _username, msg;
-    for (int i = 0; i < data.length(); i++)
+    auto it = data.find(" ");
+    if (it != string::npos)
     {
-        if (data[i] == ' ')
-        {
-            _username = data.substr(0, i);
-            msg = data.substr(i + 1);
-            break;
-        }
+        _username = data.substr(0, it);
+        msg = data.substr(it + 1);
+        msg = "[" + username + "] : " + msg; // update message with the sender's username
+
+        SOCKET rec_socket = users_socket[_username];
+
+        _send(msg, rec_socket);
     }
-
-    msg = "[" + username + "] : " + msg; // update message with the sender's username
-
-    SOCKET rec_socket = users_socket[_username];
-
-    _send(msg, rec_socket);
+    else
+        _send("User does not exist", client_socket);
 }

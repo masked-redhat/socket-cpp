@@ -76,7 +76,7 @@ void handleClient(SOCKET clientSocket)
 
         string message = recieved.first;
         string endpoint, data;
-        
+
         auto it = message.find(" ");
         if (it != string::npos)
         {
@@ -85,7 +85,7 @@ void handleClient(SOCKET clientSocket)
         }
 
         if (endpoint == "/msg")
-            handle_private_msg(data, username, users_socket);
+            handle_private_msg(data, username, users_socket, clientSocket);
         else if (endpoint == "/broadcast")
             handle_broadcasting(data, username, clients, clientMutex, clientSocket);
         else if (endpoint == "/create_group")
