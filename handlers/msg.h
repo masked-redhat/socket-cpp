@@ -4,7 +4,7 @@
 #include "../utils/utils.h"       // utility fns
 #include "../headers/namespace.h" // namespace
 
-void handle_private_msg(string &data, Connection &conn)
+void handle_private_msg(const string &data, Connection &conn)
 {
     string _username, msg;
     separate_string(data, _username, msg);

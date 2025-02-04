@@ -4,7 +4,7 @@
 #include "../utils/utils.h"       // utility fns
 #include "../headers/namespace.h" // namespace
 
-void handle_create_group(string &group_name, Connection &conn)
+void handle_create_group(const string &group_name, Connection &conn)
 {
     if (db.is_group_name_available(group_name))
     {
@@ -19,7 +19,7 @@ void handle_create_group(string &group_name, Connection &conn)
         conn.send_("Group name not available");
 }
 
-void handle_join_group(string &group_name, Connection &conn)
+void handle_join_group(const string &group_name, Connection &conn)
 {
     if (db.is_group(group_name))
     {
@@ -33,7 +33,7 @@ void handle_join_group(string &group_name, Connection &conn)
         conn.send_("Group does not exist");
 }
 
-void handle_leave_group(string &group_name, Connection &conn)
+void handle_leave_group(const string &group_name, Connection &conn)
 {
     if (db.is_group(group_name))
     {
@@ -47,7 +47,7 @@ void handle_leave_group(string &group_name, Connection &conn)
         conn.send_("Group does not exist");
 }
 
-void handle_group_message(string &data, Connection &conn)
+void handle_group_message(const string &data, Connection &conn)
 {
     string group_name, msg;
     separate_string(data, group_name, msg);

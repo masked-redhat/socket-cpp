@@ -4,7 +4,7 @@
 #ifndef UTILS_H
 #define UTILS_H
 
-void separate_string(string &data, string &string1, string &string2)
+void separate_string(const string &data, string &string1, string &string2)
 {
     auto it = data.find(" ");
     if (it == string::npos)

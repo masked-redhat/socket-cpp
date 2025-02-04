@@ -2,7 +2,7 @@
 #include "../utils/socket.h"      // connection
 #include "../headers/namespace.h" // namespace
 
-void handle_broadcasting(string &data, Connection &conn)
+void handle_broadcasting(const string &data, Connection &conn)
 {
     conn.broadcast_by(data);
 }
