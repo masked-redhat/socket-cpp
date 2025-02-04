@@ -1,78 +1,68 @@
-#include <iostream>
-#include <string>
-#include <thread>
-#include <mutex>
-#include <unordered_map>
-#include <unordered_set>
-#include <vector>
-#include <sstream>
-#include <cstring>
-#include <cstdlib>
-
-// For Windows and Linux
-#ifdef _WIN32
-#include <winsock2.h>
-#include <ws2tcpip.h>
-#pragma comment(lib, "ws2_32.lib")
-#else
-#include <sys/socket.h>
-#include <arpa/inet.h>
-#include <netinet/in.h>
-#include <unistd.h>
-#endif
-
-#define BUFFER_SIZE 1024
-
-using namespace std;
+#include "./headers/common.h"
+#include "./headers/networking.h" // socket libs
+#include "./headers/types.h"      // types (psi)
+#include "./utils/connection.h"   // connection class for socket
+#include "./headers/namespace.h"  // namespaces
 
 mutex cout_mutex;
 
-void handle_server_messages(SOCKET server_socket)
+void handle_server_messages(Connection &conn)
 {
-    char buffer[BUFFER_SIZE];
-
     while (true)
     {
-        memset(buffer, 0, BUFFER_SIZE);
-        int bytes_received = recv(server_socket, buffer, BUFFER_SIZE, 0);
-        if (bytes_received <= 0)
+        psi received = conn.receive();
+        if (received.second <= 0) // bytes read <= 0
         {
             lock_guard<mutex> lock(cout_mutex);
             cout << "Disconnected from server." << endl;
-            closesocket(server_socket);
-            WSACleanup();
+            conn.close();
             exit(0);
         }
         lock_guard<mutex> lock(cout_mutex);
-        cout << buffer << endl;
+        cout << received.first << endl;
     }
 }
 
 int main()
 {
-    WSADATA wsaData;
+// create socket
+#ifdef _WIN32
 
-    // Initialize Winsock
-    if (WSAStartup(MAKEWORD(2, 2), &wsaData) != 0)
+    // winsock initialization (windows)
+    WSADATA wsa_data;
+    if (WSAStartup(MAKEWORD(2, 2), &wsa_data) != 0)
     {
         cerr << "WSAStartup failed.\n";
-        return 1;
+        return -1;
     }
 
-    SOCKET client_socket;
-    sockaddr_in server_address{};
-
-    // Create socket
-    client_socket = socket(AF_INET, SOCK_STREAM, 0);
+    // create socket
+    SOCKET client_socket = socket(AF_INET, SOCK_STREAM, IPPROTO_TCP);
     if (client_socket == INVALID_SOCKET)
     {
-        cerr << "Error creating socket: " << WSAGetLastError() << endl;
+        cerr << "Error creating socket: " << WSAGetLastError() << "\n";
         WSACleanup();
-        return 1;
+        return -1;
     }
 
-    server_address.sin_family = AF_INET;
-    server_address.sin_port = htons(3000);
+#else
+
+    // create socket
+    int client_socket = socket(AF_INET, SOCK_STREAM, 0);
+    if (client_socket == -1)
+    {
+        cerr << "Error creating socket.\n";
+        return -1;
+    }
+
+#endif
+
+    sockaddr_in server_address{};
+    server_address.sin_family = AF_INET;   // IPv4
+    server_address.sin_port = htons(3000); // Port 3000
+
+// connect to server
+#ifdef _WIN32
 
     // Use inet_pton instead of inet_addr (inet_addr is deprecated)
     if (inet_pton(AF_INET, "127.0.0.1", &server_address.sin_addr) <= 0)
@@ -92,37 +82,60 @@ int main()
         return 1;
     }
 
+#else
+
+    server_address.sin_addr.s_addr = inet_addr("127.0.0.1");
+    if (connect(client_socket, (sockaddr *)&server_address, sizeof(server_address)) < 0)
+    {
+        cerr << "Error connecting to server." << endl;
+        return 1;
+    }
+
+#endif
+
     cout << "Connected to the server.\n";
+
+    // connection
+    Connection conn = Connection(client_socket);
 
     // Authentication
     string username, password;
-    char buffer[BUFFER_SIZE];
 
-    memset(buffer, 0, BUFFER_SIZE);
-    recv(client_socket, buffer, BUFFER_SIZE, 0); // Receive "Enter username: " message
-    cout << buffer;
+    string message = conn.receive().first; // Receive "Enter username: " message
+    cout << message;
     getline(cin, username);
-    send(client_socket, username.c_str(), username.size(), 0);
+    conn.send_(username);
 
-    memset(buffer, 0, BUFFER_SIZE);
-    recv(client_socket, buffer, BUFFER_SIZE, 0); // Receive "Enter password: " message
-    cout << buffer;
+    message = conn.receive().first; // Receive "Enter password: " message
+    cout << message;
     getline(cin, password);
-    send(client_socket, password.c_str(), password.size(), 0);
+    conn.send_(password);
 
-    memset(buffer, 0, BUFFER_SIZE);
-    recv(client_socket, buffer, BUFFER_SIZE, 0); // Receive authentication result
-    cout << buffer << endl;
+    message = conn.receive().first; // Receive authentication result
+    cout << message << endl;
 
-    if (string(buffer).find("Authentication failed") != string::npos)
+// authentication failed
+#ifdef _WIN32
+
+    if (message.find("Authentication failed") != string::npos)
     {
         closesocket(client_socket);
         WSACleanup();
         return 1;
     }
 
+#else
+
+    if (message.find("Authentication failed") != string::npos)
+    {
+        close(client_socket);
+        return 1;
+    }
+
+#endif
+
     // Start thread for receiving messages from server
-    thread receive_thread(handle_server_messages, client_socket);
+    thread receive_thread(handle_server_messages, ref(conn));
     receive_thread.detach(); // Run in the background
 
     // Send messages to the server
@@ -134,12 +147,11 @@ int main()
         if (message.empty())
             continue;
 
-        send(client_socket, message.c_str(), message.size(), 0);
+        conn.send_(message);
 
         if (message == "/exit")
         {
-            closesocket(client_socket);
-            WSACleanup();
+            conn.close();
             break;
         }
     }
