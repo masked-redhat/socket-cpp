@@ -180,7 +180,7 @@ int main()
 
 #endif
 
-    cout << "Server is listening on port " << port << " ...\n ";
+    cout << "Server is listening on port " << port << endl;
 
     // accept and handle client connections
     while (true)
