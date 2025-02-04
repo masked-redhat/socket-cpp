@@ -3,14 +3,15 @@
 #include "../headers/networking.h"
 #include "../headers/concurrency.h"
 #include "../headers/namespace.h"
+#include "../headers/setup.h"
 
-void handle_broadcasting(string data, string username, vector<SOCKET> &clients, mutex &clientMutex, SOCKET &clientSocket)
+void handle_broadcasting(string data, string username, SOCKET &client_socket)
 {
-    lock_guard<mutex> lock(clientMutex);
+    lgm lock(client_mutex);
     string message = "[" + username + "] : " + data;
     for (SOCKET client : clients)
     {
-        if (client != clientSocket)
+        if (client != client_socket)
             _send(message, client);
     }
 }

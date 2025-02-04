@@ -3,8 +3,9 @@
 #include "../headers/networking.h"
 #include "../headers/namespace.h"
 #include "../headers/utils.h"
+#include "../headers/setup.h"
 
-void handle_private_msg(string &data, string &username, map<string, SOCKET> &users_socket, SOCKET &client_socket)
+void handle_private_msg(string &data, string &username, SOCKET &client_socket)
 {
     string _username, msg;
     auto it = data.find(" ");

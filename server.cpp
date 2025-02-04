@@ -5,72 +5,66 @@
 #include "./headers/handlers.h"    // handlers
 #include "./headers/namespace.h"   // namespaces
 #include "./headers/utils.h"       // utility functions
-#include "file.h"                  // load users
+#include "./headers/setup.h"       // constant variables
 
-mutex clientMutex;
-vector<SOCKET> clients;             // To store connected client sockets
-mss users = load_users();           // load users
-map<string, SOCKET> users_socket;   // username: socket for private messaging
-map<string, vector<SOCKET>> groups; // group management
-
-void removeClient(SOCKET &clientSocket, string &username)
+void removeClient(SOCKET &client_socket, string &username)
 {
-    auto it = find(clients.begin(), clients.end(), clientSocket);
+    auto it = find(clients.begin(), clients.end(), client_socket);
     clients.erase(it);
 
     users_socket.erase(username); // erase socket from username:socket map
 }
 
-void handleClient(SOCKET clientSocket)
+void handleClient(SOCKET client_socket)
 {
-    _send("Enter username: ", clientSocket);
-    string username = _recieve(clientSocket).first;
+    _send("Enter username: ", client_socket);
+    string username = _recieve(client_socket).first;
 
     if (users_socket[username] != 0)
     {
-        _send("User already exist in connection", clientSocket);
+        _send("User already exist in connection", client_socket);
         {
-            lock_guard<mutex> lock(clientMutex);
-            removeClient(clientSocket, username);
+            lgm lock(client_mutex);
+            removeClient(client_socket, username);
         }
-        closesocket(clientSocket);
+        closesocket(client_socket);
         return;
     }
 
-    _send("Enter password: ", clientSocket);
-    string password = _recieve(clientSocket).first;
+    _send("Enter password: ", client_socket);
+    string password = _recieve(client_socket).first;
     if (users[username] != password)
     {
-        _send("Authentication failed", clientSocket);
+        _send("Authentication failed", client_socket);
         {
-            lock_guard<mutex> lock(clientMutex);
-            removeClient(clientSocket, username);
+            lgm lock(client_mutex);
+            removeClient(client_socket, username);
         }
-        closesocket(clientSocket);
+        closesocket(client_socket);
         return;
     }
     else
     {
-        _send("Authentication success", clientSocket);
+        _send("Authentication success", client_socket);
         {
-            lock_guard<mutex> lock(clientMutex);
-            users_socket[username] = clientSocket;
+            lgm lock(client_mutex);
+            users_socket[username] = client_socket;
         }
-        handle_broadcasting(username + " joined", "INFO", clients, clientMutex, clientSocket);
+        handle_broadcasting(username + " joined", "INFO", client_socket);
     }
 
     while (true)
     {
-        psi recieved = _recieve(clientSocket);
+        psi recieved = _recieve(client_socket);
         if (recieved.second <= 0) // bytes recieved
         {
             cerr << "Client disconnected.\n";
             {
-                lock_guard<mutex> lock(clientMutex);
-                handle_broadcasting(username + " left", "INFO", clients, clientMutex, clientSocket);
-                removeClient(clientSocket, username);
+                lgm lock(client_mutex);
+                handle_broadcasting(username + " left", "INFO", client_socket);
+                removeClient(client_socket, username);
             }
-            closesocket(clientSocket);
+            closesocket(client_socket);
             return;
         }
 
@@ -85,24 +79,24 @@ void handleClient(SOCKET clientSocket)
         }
 
         if (endpoint == "/msg")
-            handle_private_msg(data, username, users_socket, clientSocket);
+            handle_private_msg(data, username, client_socket);
         else if (endpoint == "/broadcast")
-            handle_broadcasting(data, username, clients, clientMutex, clientSocket);
+            handle_broadcasting(data, username, client_socket);
         else if (endpoint == "/create_group")
-            handle_create_group(groups, data, clientSocket, clientMutex);
+            handle_create_group(data, client_socket);
         else if (endpoint == "/join_group")
-            handle_join_group(groups, data, clientSocket, clientMutex);
+            handle_join_group(data, client_socket);
         else if (endpoint == "/leave_group")
-            handle_leave_group(groups, data, clientSocket, clientMutex);
+            handle_leave_group(data, client_socket);
         else if (endpoint == "/group_msg")
-            handle_group_message(groups, data, username, clientSocket, clientMutex);
+            handle_group_message(data, username, client_socket);
         else if (endpoint == "/exit")
         {
             {
-                lock_guard<mutex> lock(clientMutex);
-                removeClient(clientSocket, username);
+                lgm lock(client_mutex);
+                removeClient(client_socket, username);
             }
-            closesocket(clientSocket);
+            closesocket(client_socket);
             return;
         }
     }
@@ -160,8 +154,8 @@ int main()
         sockaddr_in clientAddr{};
         int clientAddrLen = sizeof(clientAddr);
 
-        SOCKET clientSocket = accept(serverSocket, (sockaddr *)&clientAddr, &clientAddrLen);
-        if (clientSocket == INVALID_SOCKET)
+        SOCKET client_socket = accept(serverSocket, (sockaddr *)&clientAddr, &clientAddrLen);
+        if (client_socket == INVALID_SOCKET)
         {
             cerr << "Accept failed: " << WSAGetLastError() << "\n";
             continue;
@@ -169,14 +163,14 @@ int main()
 
         // Add the client to the shared list
         {
-            lock_guard<mutex> lock(clientMutex);
-            clients.push_back(clientSocket);
+            lgm lock(client_mutex);
+            clients.push_back(client_socket);
         }
 
         cout << "New client connected.\n";
 
         // Start a thread to handle the client
-        thread(handleClient, clientSocket).detach();
+        thread(handleClient, client_socket).detach();
     }
 
     // Clean up

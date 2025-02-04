@@ -1,13 +1,13 @@
-#include "./headers/common.h"
-#include "./headers/ds.h"
-#include "./headers/namespace.h"
+#include "../headers/common.h"
+#include "../headers/ds.h"
+#include "../headers/namespace.h"
 #include <fstream>
 
 typedef map<string, string> mss;
 
 mss load_users()
 {
-    ifstream f("users.txt");
+    ifstream f("./constants/users.txt");
 
     mss users;
 

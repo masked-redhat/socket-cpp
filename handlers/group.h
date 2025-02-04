@@ -4,14 +4,15 @@
 #include "../headers/concurrency.h"
 #include "../headers/namespace.h"
 #include "../headers/utils.h"
+#include "../headers/setup.h"
 
-void handle_create_group(map<string, vector<SOCKET>> &groups, string &group_name, SOCKET &client_socket, mutex &client_mutex)
+void handle_create_group(string &group_name, SOCKET &client_socket)
 {
     if (groups.find(group_name) == groups.end() || groups.size() == 0)
     {
         {
-            lock_guard<mutex> lock(client_mutex);
-            vector<SOCKET> members;
+            lgm lock(client_mutex);
+            vS members;
             members.push_back(client_socket);
             groups[group_name] = members;
         }
@@ -22,14 +23,14 @@ void handle_create_group(map<string, vector<SOCKET>> &groups, string &group_name
         _send("Group name not available", client_socket);
 }
 
-void handle_join_group(map<string, vector<SOCKET>> &groups, string &group_name, SOCKET &client_socket, mutex &client_mutex)
+void handle_join_group(string &group_name, SOCKET &client_socket)
 {
 
     if (groups.find(group_name) != groups.end())
     {
-        vector<SOCKET> members;
+        vS members;
         {
-            lock_guard<mutex> lock(client_mutex);
+            lgm lock(client_mutex);
             members = groups[group_name];
 
             for (auto x : members)
@@ -49,13 +50,13 @@ void handle_join_group(map<string, vector<SOCKET>> &groups, string &group_name, 
         _send("Group does not exist", client_socket);
 }
 
-void handle_leave_group(map<string, vector<SOCKET>> &groups, string &group_name, SOCKET &client_socket, mutex &client_mutex)
+void handle_leave_group(string &group_name, SOCKET &client_socket)
 {
     if (groups.find(group_name) != groups.end())
     {
-        vector<SOCKET> members;
+        vS members;
         {
-            lock_guard<mutex> lock(client_mutex);
+            lgm lock(client_mutex);
             members = groups[group_name];
 
             auto it = find(members.begin(), members.end(), client_socket);
@@ -76,7 +77,7 @@ void handle_leave_group(map<string, vector<SOCKET>> &groups, string &group_name,
         _send("Group does not exist", client_socket);
 }
 
-void handle_group_message(map<string, vector<SOCKET>> &groups, string &data, string &username, SOCKET &client_socket, mutex &client_mutex)
+void handle_group_message(string &data, string &username, SOCKET &client_socket)
 {
     string group_name, msg;
     auto it = data.find(" ");
@@ -88,9 +89,9 @@ void handle_group_message(map<string, vector<SOCKET>> &groups, string &data, str
 
     if (groups.find(group_name) != groups.end())
     {
-        vector<SOCKET> members;
+        vS members;
         {
-            lock_guard<mutex> lock(client_mutex);
+            lgm lock(client_mutex);
             members = groups[group_name];
 
             auto it = find(members.begin(), members.end(), client_socket);
