@@ -4,14 +4,15 @@
 
 This project implements a **multi-threaded chat server and client** that allows users to:
 
-- **Authenticate** using a `users.txt` file.
+- **Authenticate** using a `users.txt` file in `*./constants*` directory.
 - **Send private messages** to specific users.
 - **Broadcast messages** to all connected users.
 - **Create and manage groups** for group messaging.
 - **Handle multiple clients simultaneously** using multithreading.
+- **Handles Error** by giving specific messages to clients.
 - **Support both Windows and Linux platforms**.
 
-This chat server and client are part of **CS425: Computer Networks** and aim to teach **socket programming**, **multithreading**, and **data synchronization**.
+This chat server and client are part of **CS425: Computer Networks - Assignment 1**.
 
 ---
 
@@ -38,18 +39,22 @@ chat-server/
 │   ├── common.h           # Common includes
 │   ├── networking.h       # Cross-platform networking
 │   ├── types.h            # Type definitions
+|
 │── utils/                 # Utility classes and functions
 │   ├── connection.h       # Connection class for sockets
 │   ├── database.h         # Database for users and groups
 │   ├── file.h             # File handling (loading users.txt)
 │   ├── utils.h            # String processing utilities
+|
 │── handlers/              # Message handling functions
 │   ├── msg.h              # Private message handling
 │   ├── broadcast.h        # Broadcast message handling
 │   ├── group.h            # Group message handling
+|
 │── constants/             # Constants and predefined data
 │   ├── db.h               # Global database object
 │   ├── users.txt          # List of usernames and passwords
+|
 │── server.cpp             # Main server implementation
 │── client.cpp             # Client implementation
 │── Makefile               # Compilation commands
