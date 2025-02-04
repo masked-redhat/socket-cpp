@@ -116,7 +116,7 @@ void handle_group_message(map<string, vector<SOCKET>> &groups, string &data, str
                 for (SOCKET client : members)
                 {
                     if (client != clientSocket)
-                        _send(message, clientSocket);
+                        _send(message, client);
                 }
             }
             else
