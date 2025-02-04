@@ -1,6 +1,6 @@
 #include "./headers/common.h"
 #include "./headers/networking.h" // socket libs
-#include "./utils/connection.h"   // socket utility fns
+#include "./utils/connection.h"   // connection class for socket
 #include "./utils/utils.h"        // utility fns
 #include "./constants/db.h"       // current db
 #include "./handlers/msg.h"       // handlers private message

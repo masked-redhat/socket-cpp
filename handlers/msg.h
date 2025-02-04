@@ -8,6 +8,7 @@ void handle_private_msg(const string &data, Connection &conn)
 {
     string _username, msg;
     separate_string(data, _username, msg);
+    
     if (db.is_connected(_username))
     {
         SOCKET rec_socket = db.get_socket(_username);

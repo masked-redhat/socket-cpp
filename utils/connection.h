@@ -1,8 +1,7 @@
 #include "../headers/common.h"
-#include "../headers/concurrency.h"
 #include "../headers/networking.h"
 #include "../headers/types.h"
-#include "../constants/db.h"
+#include "../constants/db.h" // current db
 #include "../headers/namespace.h"
 
 #ifndef CONNECTION
