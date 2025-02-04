@@ -11,12 +11,12 @@ void handle_create_group(const string &group_name, Connection &conn)
         bool created = db.create_group(group_name, conn.s);
 
         if (created)
-            conn.send_("Group created");
+            conn.send_("Group " + group_name + " created.");
         else
-            conn.send_("Some error occured while creating group");
+            conn.send_("Some error occured while creating group.");
     }
     else
-        conn.send_("Group name not available");
+        conn.send_("Group name not available.");
 }
 
 void handle_join_group(const string &group_name, Connection &conn)
@@ -25,12 +25,12 @@ void handle_join_group(const string &group_name, Connection &conn)
     {
         bool added = db.add_to_group(group_name, conn.s);
         if (added)
-            conn.send_("you have joined the group");
+            conn.send_("You joined the Group " + group_name + ".");
         else
-            conn.send_("You are already in this group");
+            conn.send_("You are already in this group.");
     }
     else
-        conn.send_("Group does not exist");
+        conn.send_("Group does not exist.");
 }
 
 void handle_leave_group(const string &group_name, Connection &conn)
@@ -39,12 +39,12 @@ void handle_leave_group(const string &group_name, Connection &conn)
     {
         bool left = db.leave_from_group(group_name, conn.s);
         if (left)
-            conn.send_("you have left the group");
+            conn.send_("You have left the Group " + group_name + ".");
         else
-            conn.send_("You are not in the group");
+            conn.send_("You are not in the group.");
     }
     else
-        conn.send_("Group does not exist");
+        conn.send_("Group does not exist.");
 }
 
 void handle_group_message(const string &data, Connection &conn)
@@ -55,13 +55,10 @@ void handle_group_message(const string &data, Connection &conn)
     if (db.is_group(group_name))
     {
         if (db.inside_group(group_name, conn.s))
-        {
-            sS members = db.get_group_members(group_name);
-            conn.broadcast_by(msg, members);
-        }
+            conn.broadcast_group_by(msg, group_name);
         else
-            conn.send_("You are not in the group");
+            conn.send_("You are not in the group.");
     }
     else
-        conn.send_("Group does not exist");
+        conn.send_("Group does not exist.");
 }

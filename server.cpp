@@ -52,8 +52,8 @@ bool authenticate(Connection &conn)
     db.add_user(conn.s, username); // add user to database
     conn.username = username;
 
-    conn.send_("Authentication success");
-    conn.broadcast("[INFO] " + conn.username + " joined.");
+    conn.send_("Welcome to the chat server !");
+    conn.broadcast(conn.username + " has joined the chat.");
     return true;
 }
 

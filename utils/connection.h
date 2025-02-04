@@ -46,17 +46,6 @@ public:
         return result;
     }
 
-    // broadcast from connected client to other connected clients
-    void broadcast_by(string message, sS sockets = db.get_clients())
-    {
-        message = "[" + username + "] : " + message;
-        for (SOCKET client : sockets)
-        {
-            if (client != s)
-                send(client, message.c_str(), message.size(), 0);
-        }
-    }
-
     // broadcast to other connected clients
     void broadcast(string message, sS sockets = db.get_clients())
     {
@@ -67,9 +56,31 @@ public:
         }
     }
 
+    // broadcast from connected client to other connected clients
+    void broadcast_by(string message, sS sockets = db.get_clients())
+    {
+        message = "[" + username + "] : " + message;
+        broadcast(message, sockets);
+    }
+
+    // broadcast to other connected clients in a group
+    void broadcast_group(string message, string group_name)
+    {
+        message = "[Group " + group_name + "] : " + message;
+        broadcast(message, db.get_group_members(group_name));
+    }
+
+    // broadcast from connected client to other connected clients in group
+    void broadcast_group_by(string message, string group_name)
+    {
+        message = "[Group " + group_name + " (" + username + ")] : " + message;
+        broadcast(message, db.get_group_members(group_name));
+    }
+
     // close the connection
     void close()
     {
+        broadcast(username + " has left the chat.");
         db.remove_user(s);
         db.remove_user(username);
 
@@ -85,6 +96,7 @@ public:
     void close(string message)
     {
         send_(message);
+        broadcast(username + " has left the chat.");
         db.remove_user(s);
         db.remove_user(username);
 
