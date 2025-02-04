@@ -37,6 +37,9 @@ dclean:
 	docker rm chat-container
 	docker rmi chat-server
 
+dclient:
+	docker exec -it chat-container ./client
+
 # Clean build artifacts
 clean:
 	rm -f $(SERVER_BIN) $(CLIENT_BIN)

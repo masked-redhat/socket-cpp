@@ -2,63 +2,61 @@
 
 ## 📌 Project Overview
 
-This project implements a **multi-threaded chat server and client** that allows users to:
-
-- **Authenticate** using a `users.txt` file in `*./constants*` directory.
-- **Send private messages** to specific users.
-- **Broadcast messages** to all connected users.
-- **Create and manage groups** for group messaging.
-- **Handle multiple clients simultaneously** using multithreading.
-- **Handles Error** by giving specific messages to clients.
-- **Support both Windows and Linux platforms**.
-
-This chat server and client are part of **CS425: Computer Networks - Assignment 1**.
+This project implements a multi-threaded chat server that supports private messaging, group communication, and user authentication. It is designed as part of the **CS425: Computer Networks** course assignment. The server allows clients to _connect_, _authenticate_, and _interact_ via commands such as `/msg`, `/broadcast`, `/create_group`, `/join_group`, `/leave_group`, and `/group_msg`.
 
 ---
 
 ## 🔹 Features
 
-- ✅ **User Authentication** (based on `users.txt`)
-- ✅ **Private Messaging** (`/msg <username> <message>`)
-- ✅ **Broadcast Messaging** (`/broadcast <message>`)
-- ✅ **Group Management**
+- **User Authentication** (based on `users.txt`)
+- **Private Messaging** (`/msg <username> <message>`)
+- **Broadcast Messaging** (`/broadcast <message>`)
+- **Group Management**
   - `/create_group <group_name>` - Create a group.
   - `/join_group <group_name>` - Join a group.
   - `/leave_group <group_name>` - Leave a group.
   - `/group_msg <group_name> <message>` - Send a message to a group.
-- ✅ **Thread-safe Client Management** using `std::mutex`
-- ✅ **Cross-platform Support** (Windows & Linux)
+- **Thread-safe Client Management** using `std::mutex`
+- **Cross-platform Support** (Windows & Linux)
 
 ---
 
 ## 📦 Folder Structure
 
 ```
-chat-server/
-│── headers/               # Header files
-│   ├── common.h           # Common includes
-│   ├── networking.h       # Cross-platform networking
-│   ├── types.h            # Type definitions
+.
+├── .dockerignore          # Files ignored by Docker
+├── .gitignore             # Files ignored by Git
+├── client.cpp             # Client-side implementation
 |
-│── utils/                 # Utility classes and functions
-│   ├── connection.h       # Connection class for sockets
-│   ├── database.h         # Database for users and groups
-│   ├── file.h             # File handling (loading users.txt)
-│   ├── utils.h            # String processing utilities
+├── constants/             # Constants and configurations
+│   ├── db.h               # Database initialization
+│   ├── env.h              # Environment variable loader
+│   └── users.txt          # User credentials (username:password)
 |
-│── handlers/              # Message handling functions
-│   ├── msg.h              # Private message handling
-│   ├── broadcast.h        # Broadcast message handling
-│   ├── group.h            # Group message handling
+├── Dockerfile             # Docker configuration for deployment
 |
-│── constants/             # Constants and predefined data
-│   ├── db.h               # Global database object
-│   ├── users.txt          # List of usernames and passwords
+├── handlers/              # Handlers for different commands
+│   ├── broadcast.h        # Broadcast message handler
+│   ├── group.h            # Group-related command handlers
+│   └── msg.h              # Private message handler
 |
-│── server.cpp             # Main server implementation
-│── client.cpp             # Client implementation
-│── Makefile               # Compilation commands
-│── .gitignore             # Ignored files for Git
+├── headers/               # Header files for common definitions
+│   ├── common.h           # Common includes and typedefs
+│   ├── concurrency.h      # Concurrency utilities
+│   ├── namespace.h        # Namespace declarations
+│   ├── networking.h       # Networking-related includes
+│   └── types.h            # Type definitions
+|
+├── Makefile               # Build script for compiling the server and client
+├── server.cpp             # Server-side implementation
+|
+└── utils/                 # Utility functions and classes
+    ├── connection.h       # Connection class for socket management
+    ├── database.h         # Database class for managing users and groups
+    ├── env.h              # Environment variable loader
+    ├── file.h             # File utility functions
+    └── utils.h            # General utility functions
 ```
 
 ---
@@ -102,6 +100,27 @@ chat-server/
    ./client
    ```
 
+### **🔹 Docker (Docker Desktop)**
+
+1. **Install Docker Desktop** (if not installed):
+   - Download from: [Docker Desktop](https://docs.docker.com/desktop/)
+2. **Compile the Server and Client:**
+   ```sh
+   make docker
+   ```
+3. **Open another terminal and run:**
+   ```sh
+   make dclient
+   ```
+4. **Or you can run client.ext/client.out here on port 3000:**
+   ```sh
+   ./client.exe
+   ```
+5. **Stop the Docker Container**
+   ```sh
+   make dclean
+   ```
+
 ---
 
 ## 💡 How to Use
@@ -112,7 +131,7 @@ chat-server/
 ./server
 ```
 
-The server starts listening on **port 3000** and waits for client connections.
+The server starts listening on **port 3000** or as available in **.env file** and waits for client connections.
 
 ### **Starting a Client**
 
@@ -185,11 +204,10 @@ Welcome to the chat server!
 - `broadcast.h`: Handles **broadcasts**.
 - `group.h`: Handles **group-related actions**.
 
----
+### **5. `constants/` (Message Handlers)**
 
-## 🤝 Contribution
-
-Feel free to contribute by opening issues or pull requests!
+- `db.h`: Creates **a simple memory database** for application.
+- `env.h`: Loads **environment variables** like _port_, _user file location_.
 
 ---
 
