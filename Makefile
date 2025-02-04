@@ -6,8 +6,8 @@ CXXFLAGS = -pthread -std=c++20
 # Targets
 SERVER_SRC = server.cpp
 CLIENT_SRC = client.cpp
-SERVER_BIN = server.exe
-CLIENT_BIN = client.exe
+SERVER_BIN = server
+CLIENT_BIN = client
 
 # Default target
 all:
