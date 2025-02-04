@@ -17,7 +17,7 @@ void handle_private_msg(string &data, string &username, map<string, SOCKET> &use
         }
     }
 
-    msg = "[ " + username + " ] " + msg; // update message with the sender's username
+    msg = "[" + username + "] : " + msg; // update message with the sender's username
 
     SOCKET rec_socket = users_socket[_username];
 

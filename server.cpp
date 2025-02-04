@@ -23,16 +23,12 @@ void removeClient(SOCKET &clientSocket, string &username)
 
 void handleClient(SOCKET clientSocket)
 {
-    string username;
-    string message = "Enter username: ";
-
-    _send(message, clientSocket);
-    username = _recieve(clientSocket).first;
+    _send("Enter username: ", clientSocket);
+    string username = _recieve(clientSocket).first;
 
     if (users_socket[username] != 0)
     {
-        message = "Username already exist in connection";
-        _send(message, clientSocket);
+        _send("User already exist in connection", clientSocket);
         {
             lock_guard<mutex> lock(clientMutex);
             removeClient(clientSocket, username);
@@ -41,14 +37,21 @@ void handleClient(SOCKET clientSocket)
         return;
     }
 
-    message = "Enter password: ";
-    _send(message, clientSocket);
+    _send("Enter password: ", clientSocket);
     string password = _recieve(clientSocket).first;
     if (users[username] != password)
-        message = "Authentication failed";
+    {
+        _send("Authentication failed", clientSocket);
+        {
+            lock_guard<mutex> lock(clientMutex);
+            removeClient(clientSocket, username);
+        }
+        closesocket(clientSocket);
+        return;
+    }
     else
     {
-        message = "Authentication success";
+        _send("Authentication success", clientSocket);
         {
             lock_guard<mutex> lock(clientMutex);
             users_socket[username] = clientSocket;
@@ -56,19 +59,16 @@ void handleClient(SOCKET clientSocket)
         handle_broadcasting(username + " joined", "INFO", clients, clientMutex, clientSocket);
     }
 
-    _send(message, clientSocket);
-
     while (true)
     {
         psi recieved = _recieve(clientSocket);
-        int bytes_read = recieved.second;
-        if (bytes_read <= 0)
+        if (recieved.second <= 0) // bytes recieved
         {
             cerr << "Client disconnected.\n";
             {
                 lock_guard<mutex> lock(clientMutex);
-                removeClient(clientSocket, username);
                 handle_broadcasting(username + " left", "INFO", clients, clientMutex, clientSocket);
+                removeClient(clientSocket, username);
             }
             closesocket(clientSocket);
             return;
@@ -76,6 +76,7 @@ void handleClient(SOCKET clientSocket)
 
         string message = recieved.first;
         string endpoint, data;
+        
         auto it = message.find(" ");
         if (it != string::npos)
         {

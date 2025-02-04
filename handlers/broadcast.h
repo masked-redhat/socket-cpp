@@ -7,10 +7,10 @@
 void handle_broadcasting(string data, string username, vector<SOCKET> &clients, mutex &clientMutex, SOCKET &clientSocket)
 {
     lock_guard<mutex> lock(clientMutex);
-    string message = "[ " + username + " ] : " + data;
+    string message = "[" + username + "] : " + data;
     for (SOCKET client : clients)
     {
         if (client != clientSocket)
-            _send(message, clientSocket);
+            _send(message, client);
     }
 }

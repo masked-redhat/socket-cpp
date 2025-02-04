@@ -112,7 +112,7 @@ void handle_group_message(map<string, vector<SOCKET>> &groups, string &data, str
 
             if (it != members.end())
             {
-                string message = "[ " + username + " ] : " + msg;
+                string message = "[" + username + "] : " + msg;
                 for (SOCKET client : members)
                 {
                     if (client != clientSocket)
