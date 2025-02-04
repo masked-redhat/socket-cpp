@@ -11,7 +11,6 @@ void handle_broadcasting(string data, string username, vector<SOCKET> &clients, 
     for (SOCKET client : clients)
     {
         if (client != clientSocket)
-            // Don't echo back to the sender
-            send(client, message.c_str(), message.size(), 0);
+            _send(message, clientSocket);
     }
 }

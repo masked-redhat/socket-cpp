@@ -2,6 +2,7 @@
 #include "../headers/ds.h"
 #include "../headers/networking.h"
 #include "../headers/namespace.h"
+#include "../headers/utils.h"
 
 void handle_private_msg(string &data, string &username, map<string, SOCKET> &users_socket)
 {
@@ -20,5 +21,5 @@ void handle_private_msg(string &data, string &username, map<string, SOCKET> &use
 
     SOCKET rec_socket = users_socket[_username];
 
-    send(rec_socket, msg.c_str(), msg.size(), 0);
+    _send(msg, rec_socket);
 }

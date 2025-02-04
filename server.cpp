@@ -29,14 +29,14 @@ void handleClient(SOCKET clientSocket)
     string message = "Enter username: ";
 
     memset(buffer, 0, BUFFER_SIZE);
-    send(clientSocket, message.c_str(), message.size(), 0);
+    _send(message, clientSocket);
     recv(clientSocket, buffer, BUFFER_SIZE, 0);
     username = buffer;
 
     if (users_socket[username] != 0)
     {
         message = "Username already exist in connection";
-        send(clientSocket, message.c_str(), message.size(), 0);
+        _send(message, clientSocket);
         {
             lock_guard<mutex> lock(clientMutex);
             removeClient(clientSocket, username);
@@ -47,7 +47,7 @@ void handleClient(SOCKET clientSocket)
 
     message = "Enter password: ";
     memset(buffer, 0, BUFFER_SIZE);
-    send(clientSocket, message.c_str(), message.size(), 0);
+    _send(message, clientSocket);
     recv(clientSocket, buffer, BUFFER_SIZE, 0);
     if (users[username] != buffer)
         message = "Authentication failed";
@@ -61,7 +61,7 @@ void handleClient(SOCKET clientSocket)
         handle_broadcasting(username + " joined", "INFO", clients, clientMutex, clientSocket);
     }
 
-    send(clientSocket, message.c_str(), message.size(), 0);
+    _send(message, clientSocket);
 
     while (true)
     {

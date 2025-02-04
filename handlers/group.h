@@ -3,6 +3,7 @@
 #include "../headers/networking.h"
 #include "../headers/concurrency.h"
 #include "../headers/namespace.h"
+#include "../headers/utils.h"
 
 void handle_create_group(map<string, vector<SOCKET>> &groups, string &group_name, SOCKET &clientSocket, mutex &clientMutex)
 {
@@ -16,13 +17,12 @@ void handle_create_group(map<string, vector<SOCKET>> &groups, string &group_name
         }
 
         string message = "Group created";
-        send(clientSocket, message.c_str(), message.size(), 0);
+        _send(message, clientSocket);
     }
     else
     {
         string message = "Group name not available";
-        send(clientSocket, message.c_str(), message.size(), 0);
-        return;
+        _send(message, clientSocket);
     }
 }
 
@@ -49,13 +49,12 @@ void handle_join_group(map<string, vector<SOCKET>> &groups, string &group_name, 
         }
 
         string message = "you have joined the group";
-        send(clientSocket, message.c_str(), message.size(), 0);
+        _send(message, clientSocket);
     }
     else
     {
         string message = "Group does not exist";
-        send(clientSocket, message.c_str(), message.size(), 0);
-        return;
+        _send(message, clientSocket);
     }
 }
 
@@ -73,7 +72,7 @@ void handle_leave_group(map<string, vector<SOCKET>> &groups, string &group_name,
             if (it == members.end())
             {
                 string message = "You are not in the group";
-                send(clientSocket, message.c_str(), message.size(), 0);
+                _send(message, clientSocket);
                 return;
             }
 
@@ -82,13 +81,12 @@ void handle_leave_group(map<string, vector<SOCKET>> &groups, string &group_name,
         }
 
         string message = "you have left the group";
-        send(clientSocket, message.c_str(), message.size(), 0);
+        _send(message, clientSocket);
     }
     else
     {
         string message = "Group does not exist";
-        send(clientSocket, message.c_str(), message.size(), 0);
-        return;
+        _send(message, clientSocket);
     }
 }
 
@@ -118,21 +116,19 @@ void handle_group_message(map<string, vector<SOCKET>> &groups, string &data, str
                 for (SOCKET client : members)
                 {
                     if (client != clientSocket)
-                        send(client, message.c_str(), message.size(), 0);
+                        _send(message, clientSocket);
                 }
             }
             else
             {
                 string message = "You are not in the group";
-                send(clientSocket, message.c_str(), message.size(), 0);
-                return;
+                _send(message, clientSocket);
             }
         }
     }
     else
     {
         string message = "Group does not exist";
-        send(clientSocket, message.c_str(), message.size(), 0);
-        return;
+        _send(message, clientSocket);
     }
 }
