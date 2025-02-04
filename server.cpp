@@ -7,7 +7,7 @@
 #include "./handlers/group.h"     // handlers group message
 #include "./headers/namespace.h"  // namespaces
 
-void handleClient(Connection conn)
+bool authenticate(Connection &conn)
 {
     conn.send_("Enter username: ");
     string username = conn.receive().first;
@@ -16,7 +16,7 @@ void handleClient(Connection conn)
     {
         cerr << "Client disconnected.\n";
         conn.close("User already connected.");
-        return;
+        return false;
     }
 
     conn.send_("Enter password: ");
@@ -26,14 +26,14 @@ void handleClient(Connection conn)
     {
         cerr << "Client disconnected.\n";
         conn.close("Authentication failed.");
-        return;
+        return false;
     }
 
     if (db.is_connected(username))
     {
         cerr << "Client disconnected.\n";
         conn.close("User already connected.");
-        return;
+        return false;
     }
 
     db.add_user(conn.s, username); // add user to database
@@ -41,6 +41,13 @@ void handleClient(Connection conn)
 
     conn.send_("Authentication success");
     conn.broadcast("[INFO] " + conn.username + " joined.");
+    return true;
+}
+
+void handleClient(Connection conn)
+{
+    if (!authenticate(conn))
+        return;
 
     while (true)
     {
@@ -135,14 +142,13 @@ int main()
             continue;
         }
 
-        // Add the client to the shared list
+        // Add the client to the database
         db.add_user(client_socket);
 
         cout << "New client connected.\n";
-        Connection conn = Connection(client_socket);
 
         // Start a thread to handle the client
-        thread(handleClient, conn).detach();
+        thread(handleClient, Connection(client_socket)).detach();
     }
 
     // Clean up
