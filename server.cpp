@@ -1,53 +1,49 @@
 #include "./headers/common.h"
-#include "./headers/concurrency.h" // mutex and thread
-#include "./headers/networking.h"  // socket libs
-#include "./headers/handlers.h"    // handlers
-#include "./headers/namespace.h"   // namespaces
-#include "./utils/socket.h"        // socket utility fns
-#include "./headers/setup.h"       // constant variables
+#include "./headers/networking.h" // socket libs
+#include "./utils/socket.h"       // socket utility fns
+#include "./constants/db.h"       // current db
+#include "./handlers/msg.h"       // handlers private message
+#include "./handlers/group.h"     // handlers group message
+#include "./headers/namespace.h"  // namespaces
 
-bool authenticate(Connection &conn)
+void handleClient(Connection conn)
 {
     conn.send_("Enter username: ");
-    string username = conn.recieve().first;
+    string username = conn.receive().first;
 
-    if (users_socket[username] != 0)
+    if (db.is_connected(username))
     {
-        conn.close("User already exist in connection");
-        return false;
+        cerr << "Client disconnected.\n";
+        conn.close("User already connected.");
+        return;
     }
 
     conn.send_("Enter password: ");
-    string password = conn.recieve().first;
-    if (users[username] != password)
+    string password = conn.receive().first;
+
+    if (!db.authenticate_user(username, password))
     {
-        conn.close("Authentication failed");
-        return false;
-    }
-    else
-    {
-        conn.username = username;
-        conn.send_("Authentication success");
-        {
-            lgm lock(client_mutex);
-            users_socket[username] = conn.s;
-        }
-        conn.broadcast("[INFO] : " + username + " joined");
-    }
-
-    return true;
-}
-
-void handleClient(Connection &conn)
-{
-    bool authenticated = authenticate(conn);
-
-    if (!authenticated)
+        cerr << "Client disconnected.\n";
+        conn.close("Authentication failed.");
         return;
+    }
+
+    if (db.is_connected(username))
+    {
+        cerr << "Client disconnected.\n";
+        conn.close("User already connected.");
+        return;
+    }
+
+    db.add_user(conn.s, username); // add user to database
+    conn.username = username;
+
+    conn.send_("Authentication success");
+    conn.broadcast("[INFO] " + conn.username + " joined.");
 
     while (true)
     {
-        psi recieved = conn.recieve();
+        psi recieved = conn.receive();
         if (recieved.second <= 0) // bytes recieved
         {
             cerr << "Client disconnected.\n";
@@ -69,7 +65,7 @@ void handleClient(Connection &conn)
         if (endpoint == "/msg")
             handle_private_msg(data, conn);
         else if (endpoint == "/broadcast")
-            conn.broadcast_by(data);
+            conn.broadcast_by(data, db.get_clients());
         else if (endpoint == "/create_group")
             handle_create_group(data, conn);
         else if (endpoint == "/join_group")
@@ -146,16 +142,13 @@ int main()
         }
 
         // Add the client to the shared list
-        {
-            lgm lock(client_mutex);
-            clients.push_back(client_socket);
-        }
+        db.add_user(client_socket);
 
         cout << "New client connected.\n";
         Connection conn = Connection(client_socket);
 
         // Start a thread to handle the client
-        thread(handleClient, ref(conn)).detach();
+        thread(handleClient, conn).detach();
     }
 
     // Clean up

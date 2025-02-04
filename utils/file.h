@@ -1,8 +1,10 @@
 #include <fstream>
 #include "../headers/common.h"
+#include "../headers/types.h"
 #include "../headers/namespace.h"
 
-typedef map<string, string> mss;
+#ifndef LOADFILE
+#define LOADFILE
 
 mss load_users()
 {
@@ -24,3 +26,5 @@ mss load_users()
 
     return users;
 }
+
+#endif

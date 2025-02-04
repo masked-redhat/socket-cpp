@@ -1,15 +1,14 @@
 #include "../headers/common.h"
 #include "../headers/concurrency.h"
 #include "../headers/networking.h"
-#include "../headers/setup.h"
+#include "../headers/types.h"
+#include "../constants/db.h"
 #include "../headers/namespace.h"
 
 #ifndef CONNECTION
 #define CONNECTION
 
 #define BUFFER_SIZE 1024
-
-typedef pair<string, int> psi;
 
 class Connection
 {
@@ -33,7 +32,7 @@ public:
     }
 
     // recieves from connected client
-    psi recieve()
+    psi receive()
     {
         char buffer[BUFFER_SIZE];
         memset(buffer, 0, sizeof(buffer)); // reset buffer
@@ -47,9 +46,8 @@ public:
     }
 
     // broadcast from connected client to other connected clients
-    void broadcast_by(string message, vS sockets = clients)
+    void broadcast_by(string message, sS sockets = db.get_clients())
     {
-        lgm lock(client_mutex);
         message = "[" + username + "] : " + message;
         for (SOCKET client : sockets)
         {
@@ -59,9 +57,8 @@ public:
     }
 
     // broadcast to other connected clients
-    void broadcast(string message, vS sockets = clients)
+    void broadcast(string message, sS sockets = db.get_clients())
     {
-        lgm lock(client_mutex);
         for (SOCKET client : sockets)
         {
             if (client != s)
@@ -72,13 +69,8 @@ public:
     // close the connection
     void close()
     {
-        {
-            lgm lock(client_mutex);
-            auto it = find(clients.begin(), clients.end(), s);
-            clients.erase(it);
-
-            users_socket.erase(username); // erase socket from username:socket map
-        }
+        db.remove_user(s);
+        db.remove_user(username);
         closesocket(s);
     }
 
@@ -86,13 +78,8 @@ public:
     void close(string message)
     {
         send_(message);
-        {
-            lgm lock(client_mutex);
-            auto it = find(clients.begin(), clients.end(), s);
-            clients.erase(it);
-
-            users_socket.erase(username); // erase socket from username:socket map
-        }
+        db.remove_user(s);
+        db.remove_user(username);
         closesocket(s);
     }
 };

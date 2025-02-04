@@ -1,21 +1,18 @@
-#include "../headers/common.h"
-#include "../headers/concurrency.h"
-#include "../headers/setup.h"
-#include "../utils/socket.h"
-#include "../headers/namespace.h"
+#include "../headers/common.h"    // string
+#include "../utils/socket.h"      // connection
+#include "../constants/db.h"      // database
+#include "../headers/namespace.h" // namespace
 
 void handle_create_group(string &group_name, Connection &conn)
 {
-    if (groups.find(group_name) == groups.end() || groups.size() == 0)
+    if (db.is_group_name_available(group_name))
     {
-        {
-            lgm lock(client_mutex);
-            vS members;
-            members.push_back(conn.s);
-            groups[group_name] = members;
-        }
+        bool created = db.create_group(group_name, conn.s);
 
-        conn.send_("Group created");
+        if (created)
+            conn.send_("Group created");
+        else
+            conn.send_("Some error occured while creating group");
     }
     else
         conn.send_("Group name not available");
@@ -23,28 +20,13 @@ void handle_create_group(string &group_name, Connection &conn)
 
 void handle_join_group(string &group_name, Connection &conn)
 {
-
-    if (groups.find(group_name) != groups.end())
+    if (db.is_group(group_name))
     {
-        {
-            lgm lock(client_mutex);
-            vS members = groups[group_name];
-
-            auto it = find(members.begin(), members.end(), conn.s);
-
-            if (it != members.end())
-            {
-                members.push_back(conn.s);    // add client to members
-                groups[group_name] = members; // update members
-            }
-            else
-            {
-                conn.send_("You are already in this group");
-                return;
-            }
-        }
-
-        conn.send_("you have joined the group");
+        bool added = db.add_to_group(group_name, conn.s);
+        if (added)
+            conn.send_("you have joined the group");
+        else
+            conn.send_("You are already in this group");
     }
     else
         conn.send_("Group does not exist");
@@ -52,27 +34,13 @@ void handle_join_group(string &group_name, Connection &conn)
 
 void handle_leave_group(string &group_name, Connection &conn)
 {
-    if (groups.find(group_name) != groups.end())
+    if (db.is_group(group_name))
     {
-        {
-            lgm lock(client_mutex);
-            vS members = groups[group_name];
-
-            auto it = find(members.begin(), members.end(), conn.s);
-
-            if (it != members.end())
-            {
-                members.erase(it);            // remove client from members
-                groups[group_name] = members; // update members
-            }
-            else
-            {
-                conn.send_("You are not in the group");
-                return;
-            }
-        }
-
-        conn.send_("you have left the group");
+        bool left = db.leave_from_group(group_name, conn.s);
+        if (left)
+            conn.send_("you have left the group");
+        else
+            conn.send_("You are not in the group");
     }
     else
         conn.send_("Group does not exist");
@@ -88,20 +56,13 @@ void handle_group_message(string &data, Connection &conn)
         msg = data.substr(it + 1);
     }
 
-    if (groups.find(group_name) != groups.end())
+    if (db.is_group(group_name))
     {
-        vS members;
-        {
-            lgm lock(client_mutex);
-            members = groups[group_name];
-        }
-
-        auto it = find(members.begin(), members.end(), conn.s);
-
-        if (it != members.end())
-            conn.broadcast_by(msg, members);
-        else
+        if (!db.inside_group(group_name, conn.s))
             conn.send_("You are not in the group");
+
+        sS members = db.get_group_members(group_name);
+        conn.broadcast_by(msg, members);
     }
     else
         conn.send_("Group does not exist");

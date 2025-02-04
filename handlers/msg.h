@@ -1,6 +1,7 @@
-#include "../headers/common.h"
-#include "../utils/socket.h"
-#include "../headers/namespace.h"
+#include "../headers/common.h"    // string
+#include "../constants/db.h"      // database
+#include "../utils/socket.h"      // connection
+#include "../headers/namespace.h" // namespace
 
 void handle_private_msg(string &data, Connection &conn)
 {
@@ -11,9 +12,9 @@ void handle_private_msg(string &data, Connection &conn)
         _username = data.substr(0, it); // set target username
         msg = data.substr(it + 1);      // set msg to send
 
-        if (users_socket.find(_username) != users_socket.end())
+        if (db.is_connected(_username))
         {
-            SOCKET rec_socket = users_socket[_username];
+            SOCKET rec_socket = db.get_socket(_username);
             conn.send_to(msg, rec_socket);
         }
         else
