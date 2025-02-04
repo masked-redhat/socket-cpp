@@ -8,6 +8,18 @@
 #include "./handlers/group.h"     // handlers group message
 #include "./headers/namespace.h"  // namespaces
 
+typedef unordered_map<string, function<void(const string &, Connection &)>> ep;
+
+// endpoints for this application
+static const ep endpoints = {
+    {"/msg", handle_private_msg},
+    {"/broadcast", handle_broadcasting},
+    {"/create_group", handle_create_group},
+    {"/join_group", handle_join_group},
+    {"/leave_group", handle_leave_group},
+    {"/group_msg", handle_group_message},
+};
+
 bool authenticate(Connection &conn)
 {
     conn.send_("Enter username: ");
@@ -53,7 +65,7 @@ void handleClient(Connection conn)
     while (true)
     {
         psi recieved = conn.receive();
-        if (recieved.second <= 0) // bytes recieved
+        if (recieved.second <= 0) // bytes recieved <= 0
         {
             cerr << "Client disconnected.\n";
             conn.broadcast("[INFO] : " + conn.username + " left");
@@ -64,19 +76,16 @@ void handleClient(Connection conn)
         string endpoint, data;
         separate_string(recieved.first, endpoint, data);
 
-        if (endpoint == "/msg")
-            handle_private_msg(data, conn);
-        else if (endpoint == "/broadcast")
-            handle_broadcasting(data, conn);
-        else if (endpoint == "/create_group")
-            handle_create_group(data, conn);
-        else if (endpoint == "/join_group")
-            handle_join_group(data, conn);
-        else if (endpoint == "/leave_group")
-            handle_leave_group(data, conn);
-        else if (endpoint == "/group_msg")
-            handle_group_message(data, conn);
-        else if (endpoint == "/exit")
+        // calls the function by matching from the above map
+        auto it = endpoints.find(endpoint);
+        if (it != endpoints.end())
+        {
+            it->second(data, conn);
+            continue;
+        }
+
+        // Exit or Invalid endpoints
+        if (endpoint == "/exit")
         {
             conn.close();
             return;
