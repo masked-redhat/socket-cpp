@@ -99,7 +99,7 @@ void handle_group_message(string &data, Connection &conn)
         auto it = find(members.begin(), members.end(), conn.s);
 
         if (it != members.end())
-            conn.broadcast(msg, members);
+            conn.broadcast_by(msg, members);
         else
             conn._send("You are not in the group");
     }

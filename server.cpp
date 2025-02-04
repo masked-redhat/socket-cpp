@@ -14,7 +14,7 @@ bool authenticate(Connection &conn)
     if (users_socket[username] != 0)
     {
         conn.close("User already exist in connection");
-        return;
+        return false;
     }
 
     conn._send("Enter password: ");
@@ -71,7 +71,7 @@ void handleClient(SOCKET client_socket)
         if (endpoint == "/msg")
             handle_private_msg(data, conn);
         else if (endpoint == "/broadcast")
-            handle_broadcasting(data, conn);
+            conn.broadcast_by(data);
         else if (endpoint == "/create_group")
             handle_create_group(data, conn);
         else if (endpoint == "/join_group")

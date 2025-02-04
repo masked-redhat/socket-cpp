@@ -47,10 +47,21 @@ public:
     }
 
     // broadcast from connected client to other connected clients
-    void broadcast(string message, vS sockets = clients)
+    void broadcast_by(string message, vS sockets = clients)
     {
         lgm lock(client_mutex);
         message = "[" + username + "] : " + message;
+        for (SOCKET client : sockets)
+        {
+            if (client != s)
+                send(client, message.c_str(), message.size(), 0);
+        }
+    }
+
+    // broadcast to other connected clients
+    void broadcast(string message, vS sockets = clients)
+    {
+        lgm lock(client_mutex);
         for (SOCKET client : sockets)
         {
             if (client != s)
