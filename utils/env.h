@@ -5,9 +5,9 @@
 #ifndef LOAD_ENV
 #define LOAD_ENV
 
-mss load_env()
+mss load_env(string env_filename = ".env")
 {
-    ifstream f(".env"); // load env file
+    ifstream f(env_filename); // load env file
 
     mss vars;
 

@@ -4,7 +4,7 @@
 #ifndef ENV_H
 #define ENV_H
 
-mss envs = load_env();
+mss envs = load_env(".env"); // env file name is '.env'
 
 string get_env(string key, string default_value = "")
 {
