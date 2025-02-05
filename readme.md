@@ -225,7 +225,7 @@ Welcome to the chat server!
 - `broadcast.h`: Handles **broadcasts**.
 - `group.h`: Handles **group-related actions**.
 
-### **5. `constants/` (Message Handlers)**
+### **5. `constants/` (Config files and db initializations)**
 
 - `db.h`: Creates **a simple memory database** for application.
 - `env.h`: Loads **environment variables** like _port_, _user file location_.
