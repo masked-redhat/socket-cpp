@@ -84,6 +84,12 @@ This project implements a multi-threaded chat server that supports private messa
 
 ## 🛠️ Installation & Setup
 
+### **🔹 Pre: GitHub Clone**
+
+1. **Clone Repo** (if not cloned/does not have zip):
+   - Github Link: [socket-cpp](https://github.com/masked-redhat/socket-cpp)
+2. **Follow next steps as per your system**
+
 ### **🔹 Windows (MinGW or MSVC)**
 
 1. **Install MinGW** (if not installed):
